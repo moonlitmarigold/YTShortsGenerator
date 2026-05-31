@@ -1,18 +1,26 @@
-# MPV2 Roadmap
+# YTShortsGenerator
 
-This document outlines the features that need to be implemented in MPV2.
+Main feature: automatic yt shorts generator and uploader
 
-## Features
+## Roadmap
 
-- [ ] Automated Cold Calling
-- [ ] Item Flipping (such as sneakers)
-- [ ] Create a Short based on long-form content
-- [ ] Subtitles for Shorts
+- [ ] Update old programm structure//delte unnessesary files
+- [ ] Regenerate and distribute fuctions of the YoutubeClass
+- [ ] Login with yt credentials
+- [ ] (Distribute to other plattforms?)
+- [ ] Implement the new workflow
+  - [ ] Topic & script generation
+  - [ ] Text-to-speech narration
+  - [ ] Visuals & background video
+  - [ ] Subtitle overlay
+  - [ ] Video assembly & encoding
+  - [ ] Metadata & thumbnail generation
+  - [ ] Schedule & upload
 
-## Adding a new feature
+## Video Generation Types
 
-If you want to add a new feature to MPV2, please create a new issue and label it with `enhancement`. After that, create a new branch and start working on the feature. Once you are done, create a pull request and assign it to the issue you created earlier.
-
-## Contributing
-
-Please read [CONTRIBUTING.md](CONTRIBUTING.md) for details on our code of conduct, and the process for submitting pull requests to us.
+- [ ] "Did you know?"
+- [ ] "Top 5 / 10 lists"
+- [ ] Quote videos
+- [ ] Daily summaries (news or articles)
+- [ ] Micro fiction
