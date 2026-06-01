@@ -1,5 +1,4 @@
 __pycache__
-config.json
 .mp/
 venv/
 Songs/
@@ -8,3 +7,5 @@ niche.txt
 *.exe
 auto.sh
 .DS_Store
+.env
+config.yaml
