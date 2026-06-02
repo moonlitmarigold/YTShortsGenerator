@@ -9,3 +9,4 @@ auto.sh
 .DS_Store
 .env
 config.yaml
+.idea

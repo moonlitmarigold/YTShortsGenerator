@@ -1,5 +1,5 @@
 
 
-class session_info:
+class SessionInfo:
     
     ...
