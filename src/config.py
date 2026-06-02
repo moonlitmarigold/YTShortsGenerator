@@ -3,6 +3,20 @@ import os
 from pathlib import Path
 import yaml
 
+def find_config_file() -> Path:
+    """Search for config.yaml in the current directory and parent directories."""
+    possible_path = Path(os.curdir) / "config.yaml"
+    if possible_path.exists():
+        return possible_path.resolve()
+    raise FileNotFoundError("No config.yaml found in current or parent directories.")
+
+def find_env_file() -> Path:
+    """Search for .env in the current directory and parent directories."""
+    possible_path = Path(os.curdir) / ".env"
+    if possible_path.exists():
+        return possible_path.resolve()
+    raise FileNotFoundError("No .env file found in current or parent directories.")
+
 class Config:
     
     def __init__(self, config_file:Path, env_file:Path) -> None:
@@ -16,6 +30,9 @@ class Config:
     @property
     def generation_types(self):
         return self.current_dir / "generation_types"
+
+    def run(self):
+        ...
         
     def read(self):
         config: yaml.YAMLObject = self._read_config()

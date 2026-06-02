@@ -12,3 +12,11 @@ class Ollama(BaseProvider):
     @property
     def _client(self) -> ollama.Client:
         return ollama.Client(host=self.base_url)
+
+    def prompt(self, content:str):
+        response = self._client.chat(
+            model=self.model,
+            messages=[{"role": "user", "content": content}],
+        )
+
+        return response["message"]["content"].strip()

@@ -54,9 +54,3 @@ AMAZON_PRODUCT_TITLE_ID = "productTitle"
 AMAZON_FEATURE_BULLETS_ID = "feature-bullets"
 
 
-# New Section
-from providers import Ollama
-
-PROVIDER_REGISTER = {
-    "ollama": Ollama.Ollama
-}

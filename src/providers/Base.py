@@ -13,4 +13,7 @@ class BaseProvider:
 
     @property
     def model(self):
-        return self.config.get("provider_model", None)
+        _model = self.config.get("provider_model", None)
+        if _model:
+            return _model
+        raise Exception("Provider model not specified in config")

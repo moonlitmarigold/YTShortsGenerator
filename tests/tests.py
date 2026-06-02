@@ -3,6 +3,7 @@ from pathlib import Path
 import sys
 from src import config
 from src.providers import Ollama
+from src import pipeline
 
 def test_config_loads_example_config():
     """Test that the config can be loaded from example_config.yaml"""
@@ -37,5 +38,15 @@ def test_providers():
 
 
     o = Ollama.Ollama(conf)
-    assert o.base_url == conf['ollama_base_url']
-    assert o.model == conf['ollama_model']
+    assert o.base_url == conf['provider_url']
+    assert o.model == conf['provider_model']
+
+def test_pipeline():
+
+    config_file = Path('config.yaml')
+    env_file = Path('.env')
+
+    with pipeline.PipelineBuilder(config_file, env_file) as pipeline_builder:
+        _pipeline = pipeline_builder.build()
+
+    assert isinstance(_pipeline, pipeline.Pipeline)

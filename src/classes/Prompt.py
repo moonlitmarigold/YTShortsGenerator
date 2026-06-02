@@ -1,5 +1,5 @@
 from yaml import YAMLObject
-from .. import constants
+from .. import providers
 
 class Prompt:
 
@@ -7,7 +7,7 @@ class Prompt:
         self.config = config
 
     def provider(self):
-        _provider = constants.PROVIDER_REGISTER.get(self.config['provider', None], None)
+        _provider = providers.PROVIDER_REGISTER.get(self.config['provider', None], None)
         if _provider:
             return _provider
 
@@ -15,4 +15,5 @@ class Prompt:
         raise Exception("Unknown provider")
 
     def run(self):
-        ...
+        provider_class = self.provider()
+
