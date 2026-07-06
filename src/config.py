@@ -2,6 +2,9 @@
 import os
 from pathlib import Path
 import yaml
+from pydantic import BaseModel, Field
+from pydantic_settings import SettingsConfigDict, BaseSettings
+from .providers import Base
 
 def find_config_file() -> Path:
     """Search for config.yaml in the current directory and parent directories."""
@@ -17,6 +20,14 @@ def find_env_file() -> Path:
         return possible_path.resolve()
     raise FileNotFoundError("No .env file found in current or parent directories.")
 
+def open_config_env():
+    config_file = find_config_file()
+    env_file = find_env_file()
+
+    app_config = AppConfig.model_validate(yaml.safe_load(config_file.read_text()))
+    env = Secrets(_env_file=env_file)
+    return app_config, env
+
 class Config:
     
     def __init__(self, config_file:Path, env_file:Path) -> None:
@@ -30,9 +41,6 @@ class Config:
     @property
     def generation_types(self):
         return self.current_dir / "generation_types"
-
-    def run(self):
-        ...
         
     def read(self):
         config: yaml.YAMLObject = self._read_config()
@@ -74,4 +82,18 @@ class Config:
         config['prompt'] = prompt
         
         return config
+
+class AppConfig(BaseModel):
+    generation_type: str
+    provider: Base.ProviderConfig
+    prompt: str | None = None  # inject after load
+
+
+class Secrets(BaseSettings):
+
+    model_config = SettingsConfigDict(env_file='.env', env_file_encoding='utf-8', case_sensitive=False)
+    youtube_api_key: str               # <- from env YOUTUBE_API_KEY, errors if missing
+    elevenlabs_api_key: str | None = None
+
+
         

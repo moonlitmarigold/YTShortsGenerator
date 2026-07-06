@@ -1,5 +1,7 @@
 from yaml import YAMLObject
 from .. import providers
+import logging
+logger = logging.getLogger(__name__)
 
 class Prompt:
 
@@ -7,7 +9,7 @@ class Prompt:
         self.config = config
 
     def provider(self):
-        _provider = providers.PROVIDER_REGISTER.get(self.config['provider', None], None)
+        _provider = providers.PROVIDER_REGISTER.get(self.config['provider'], None)
         if _provider:
             return _provider
 
@@ -15,5 +17,10 @@ class Prompt:
         raise Exception("Unknown provider")
 
     def run(self):
-        provider_class = self.provider()
+        logger.info('Starting Prompt')
+        logger.info('Prompt content: %s', self.config.get('prompt'))
+        provider_class = self.provider()(self.config)
+        response = provider_class.prompt()
+        logger.info('Prompt response: %s', response)
+        return response
 
