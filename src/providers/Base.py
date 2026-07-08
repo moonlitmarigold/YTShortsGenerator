@@ -1,6 +1,12 @@
 import yaml
 import dataclasses
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
+
+PROVIDER_REGISTER = dict()
+
+def register(cls):
+    PROVIDER_REGISTER[cls.__name__.lower()] = cls
+    return cls
 
 class ProviderConfig(BaseModel):
     name: str
@@ -8,6 +14,13 @@ class ProviderConfig(BaseModel):
     url: str = "http://127.0.0.1:11434"  # the fallback lives here now
     num_ctx: int = Field(default=8192, ge=8192)
     prompt: str | None = None  # inject after load
+
+    @field_validator('name', mode='after')
+    @classmethod
+    def check_model(cls, value:str):
+        if value not in PROVIDER_REGISTER.keys():
+            raise ValueError('Provider {} is not supported: Supported Provider are: {}'.format(value, PROVIDER_REGISTER.keys()))
+        return value
 
 @dataclasses.dataclass
 class BaseProvider:

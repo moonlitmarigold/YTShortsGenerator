@@ -1,6 +1,5 @@
-import yaml
-
-from . import config
+import pydantic
+from . import config, sessions
 from .classes import Prompt
 from pathlib import Path
 
@@ -11,27 +10,39 @@ class Pipeline:
     
     def __init__(self):
         self.steps = dict()
+        self.session_obj:sessions.SessionInfo = None
 
     def add_steps(self, **kwargs):
         for key, value in kwargs.items():
             self.steps[key] = value
 
+    def set_session_obj(self, obj):
+        self.session_obj = obj
+
     def run(self):
         logger.info('Starting pipeline with {} steps'.format(len(self.steps)))
+
+        self.session_obj.status = sessions.Status.RUNNING
+
         for key, value in self.steps.items():
             logger.debug('Running step: {}'.format(key))
             try:
                 value.run()
             except Exception as e:
                 logger.error('Error running step {}: {}'.format(key, e))
+                self.session_obj.status = sessions.Status.FAILED
                 raise e
+
+        self.session_obj.status = sessions.Status.COMPLETED
     
 class PipelineBuilder:
     
-    def __init__(self, path_config:Path, path_env:Path):
+    def __init__(self, path_config:Path | None = None, path_env:Path | None = None):
         self.pipeline = Pipeline()
         self.path_config = path_config
         self.path_env = path_env
+        self.app_config:config.AppConfig = None
+        self.env_config:config.Secrets = None
 
 
     def add_steps(self, **kwargs):
@@ -39,33 +50,36 @@ class PipelineBuilder:
 
     def build_list(self):
         return (
+            self._config,
+            self._session,
             self._prompt,
         )
 
     def build(self):
         logger.debug('Building pipeline')
-        logger.debug('Loading in config')
-        _conf = self._config()
-        logger.debug('config after loading:\n{}'.format(yaml.dump(_conf, default_flow_style=False, indent=4, width=80)))
         build_list = self.build_list()
 
         logger.info('Building pipeline with {} steps'.format(len(build_list)))
         for step in build_list:
-            step(_conf)
+            step()
 
         logger.info('Finished Building the pipeline')
 
-        # TODO: validate pipeline // use extra parameters fro required parameters in the steps
         return self.pipeline
 
     def _config(self):
-        c = config.Config(self.path_config, self.path_env)
-        _conf = c.read()
-        return _conf
+        logger.debug('Loading in config')
+        self.app_config, self.env_config = config.open_config_env(self.path_config, self.path_env)
+        logger.debug('config after loading:\n{}'.format(self.app_config.model_dump_json()))
 
-    def _prompt(self, _conf:yaml.YAMLObject):
-        p = Prompt.Prompt(_conf)
+    def _prompt(self):
+        p = Prompt.Prompt(self.app_config.provider)
         self.add_steps(Prompt=p)
+        pass
+
+    def _session(self):
+        s = sessions.SessionInfo(self.app_config.generation_type)
+        self.pipeline.set_session_obj(s)
 
     def __enter__(self):
         return self

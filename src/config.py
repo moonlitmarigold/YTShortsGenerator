@@ -21,11 +21,13 @@ def find_env_file() -> Path:
         return possible_path.resolve()
     raise FileNotFoundError("No .env file found in current or parent directories.")
 
-def open_config_env():
-    config_file = find_config_file()
-    env_file = find_env_file()
+def open_config_env(conf_file:Path | None = None, env_file:Path | None = None):
+    if conf_file is None:
+        conf_file = find_config_file()
+    if env_file is None:
+        env_file = find_env_file()
 
-    app_config = AppConfig.model_validate(yaml.safe_load(config_file.read_text()))
+    app_config = AppConfig.model_validate(yaml.safe_load(conf_file.read_text()))
     env = Secrets(_env_file=env_file)
     return app_config, env
 
@@ -33,7 +35,7 @@ class AppConfig(BaseModel):
     generation_type: str
     provider: Base.ProviderConfig
 
-    @field_validator('generation_type', mode='before')
+    @field_validator('generation_type', mode='after')
     @classmethod
     def check_generation_type(cls, value:str):
         if value not in generation_types.GENERATION_TYPES.keys():

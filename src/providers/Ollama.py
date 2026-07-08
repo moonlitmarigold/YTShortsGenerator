@@ -1,9 +1,9 @@
 #import yaml
 import dataclasses
-from .Base import BaseProvider
+from .Base import BaseProvider, register
 import ollama
-from ollama import ChatResponse
 
+@register
 @dataclasses.dataclass
 class Ollama(BaseProvider):
 
@@ -13,6 +13,15 @@ class Ollama(BaseProvider):
     # thousands of tokens "thinking" before emitting content, so the default is too
     # small and the response gets truncated mid-thought, leaving content empty.
     fallback_num_ctx: int = 8192
+
+    def __post_init__(self):
+        self._validate_model()
+
+    def _validate_model(self):
+        client = self._client
+        models = [x.model for x in client.list()['models']]
+        if self.model not in models:
+            raise ValueError(f'Model {self.model} is not supported/installed. Installed models are {models}')
 
     @property
     def _client(self) -> ollama.Client:

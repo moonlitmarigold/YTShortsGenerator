@@ -1,6 +1,3 @@
 from . import *
 from . import Ollama
-
-PROVIDER_REGISTER = {
-    "ollama": Ollama.Ollama
-}
+from .Base import PROVIDER_REGISTER

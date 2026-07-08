@@ -29,6 +29,11 @@ prompt: |
     "video_guidance": {
       "pacing_recommendation": "How fast should the text appear? (e.g., Quick cuts with dramatic pauses, Slow and steady, Rapid-fire points).",
       "music_genre": "Suggest a background music style (e.g., Cinematic orchestral, Lo-fi hip-hop, Indie pop).",
-      "visual_text_highlight": "Identify 1-2 key phrases from the body text that should be displayed on the screen using large, dynamic text overlays for emphasis."
-    }
+      "visual_text_highlight": "Identify 1-2 key phrases from the body text that should be displayed on the screen using large, dynamic text overlays for emphasis.",
+      "time_pause": {
+        "hook_quote": "Pause between hook and quote in ms",
+        "quote_body": "Pause between quote and body in ms",
+        "body_call": "Pause between body and call_to_action in ms",
+      }
+    },
   }
