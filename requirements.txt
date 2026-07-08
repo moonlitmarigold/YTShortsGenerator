@@ -19,3 +19,5 @@ undetected_chromedriver
 platformdirs
 
 pydantic
+pydantic_settings
+yaml

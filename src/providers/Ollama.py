@@ -16,19 +16,14 @@ class Ollama(BaseProvider):
 
     @property
     def _client(self) -> ollama.Client:
-        return ollama.Client(host=self.base_url)
-
-    @property
-    def num_ctx(self) -> int:
-        return self.config.get("provider_num_ctx", self.fallback_num_ctx)
+        return ollama.Client(host=self.provider_url())
 
     def prompt(self) -> str:
-        content = self.config.get("prompt")
-        response:ChatResponse = self._client.chat(
+        response = self._client.chat(
             model=self.model,
             messages=[
                 {"role": "user",
-                 "content": content}
+                 "content": self.config.prompt}
             ],
             options={"num_ctx": self.num_ctx},
         )

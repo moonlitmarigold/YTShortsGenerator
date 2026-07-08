@@ -4,6 +4,7 @@ import sys
 from src import config
 from src.providers import Ollama
 from src import pipeline
+import yaml
 
 def test_config():
     app_config, env = config.open_config_env()
