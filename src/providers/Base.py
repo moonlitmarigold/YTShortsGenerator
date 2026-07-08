@@ -1,6 +1,7 @@
 import yaml
 import dataclasses
 from pydantic import BaseModel, Field, field_validator
+from .. import generation_types
 
 PROVIDER_REGISTER = dict()
 
@@ -14,6 +15,10 @@ class ProviderConfig(BaseModel):
     url: str = "http://127.0.0.1:11434"  # the fallback lives here now
     num_ctx: int = Field(default=8192, ge=8192)
     prompt: str | None = None  # inject after load
+    # Holds the GenerationOutput *subclass* (used as a factory in Prompt.run), not an
+    # instance. Excluded from serialization: it's injected from generation_type, and a
+    # class object isn't JSON-serializable (PydanticSerializationError otherwise).
+    generation_output: type[generation_types.schemas.GenerationOutput] | None = Field(default=None, exclude=True)
 
     @field_validator('name', mode='after')
     @classmethod

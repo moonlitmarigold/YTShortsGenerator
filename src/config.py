@@ -44,9 +44,9 @@ class AppConfig(BaseModel):
 
     @model_validator(mode='after')
     def inject_prompt(self):
-        generation_obj =generation_types.GENERATION_TYPES[self.generation_type]
-        raw = yaml.safe_load(generation_obj.prompt_file.read_text())
-        self.provider.prompt = raw['prompt']
+        generation_obj = generation_types.GENERATION_TYPES[self.generation_type]
+        self.provider.prompt = generation_obj.prompt_file.read_text()
+        self.provider.generation_output = generation_obj.generation_output
         return self
 
 

@@ -1,5 +1,6 @@
 from yaml import YAMLObject
 from .. import providers
+import json
 import logging
 logger = logging.getLogger(__name__)
 
@@ -17,6 +18,12 @@ class Prompt:
         logger.info('Starting Prompt')
         logger.info('Prompt content: %s', self.config.prompt)
         response = self.provider.prompt()
-        logger.info('Prompt response: %s', response)
+        print(response)
+        #split_response = response.split('\n')
+        #clean_response = json.loads('\n'.join(split_response[1:-1]))
+        #logger.info('Prompt response: %s', clean_response)
+
+        #output = self.config.generation_output.model_validate(clean_response)
+        #print(output)
         return response
 

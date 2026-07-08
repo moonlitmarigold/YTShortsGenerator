@@ -16,7 +16,7 @@ class GenerationType:
 GENERATION_TYPES = {
     "quote": GenerationType(
         name="quote",
-        _prompt_file="quote.yaml",
+        _prompt_file="quote.md",
         generation_output= schemas.QuoteOutput
     ),
 }

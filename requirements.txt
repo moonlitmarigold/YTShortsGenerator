@@ -21,3 +21,4 @@ platformdirs
 pydantic
 pydantic_settings
 yaml
+sqlmodel
