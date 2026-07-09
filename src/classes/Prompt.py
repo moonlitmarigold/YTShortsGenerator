@@ -1,4 +1,4 @@
-from yaml import YAMLObject
+from pydantic import BaseModel
 from .. import providers, generation_types, sessions
 import json
 import logging
@@ -7,13 +7,13 @@ import re
 
 class Prompt:
 
-    def __init__(self, config:providers.Base.ProviderConfig):
+    def __init__(self, config:providers.Base.ProviderConfig, secrets:type[BaseModel]):
         self.config = config
-        self.provider: providers.Base.BaseProvider = self._provider()
+        self.provider: providers.Base.BaseProvider = self._provider(secrets)
 
-    def _provider(self):
+    def _provider(self, secrets:type[BaseModel]):
         _provider = providers.PROVIDER_REGISTER.get(self.config.name, None)
-        return _provider(self.config)
+        return _provider(self.config, secrets)
 
     @staticmethod
     def _parse_output(output:str):

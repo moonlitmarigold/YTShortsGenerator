@@ -36,7 +36,7 @@ class SessionInfo:
 
     @property
     def file(self):
-        p = Path(__file__).parent / 'files' / str(self.id)
+        p = Path(__file__).parent / 'files' / str(self.generation_session.id)
         p.mkdir(exist_ok=True, parents=True)
         return p
 
@@ -61,7 +61,7 @@ class SessionInfo:
             pov=app_config.metadata.pov.value,
             status=Status.PENDING.value,
         )
-        return cls(generation_session)
+        return cls(generation_session).save()
 
     @classmethod
     def from_sql(cls, generation_session_id: int) -> "SessionInfo":
@@ -132,7 +132,13 @@ class SessionInfo:
 
         return self
 
-    def __del__(self):
+    def delete(self):
+        """Explicitly remove this session (and any associated video/scenes) from the database.
+
+        Not implemented as __del__: that hook fires whenever Python garbage-collects
+        the object (e.g. end of any function scope), which was silently wiping rows
+        right after save() persisted them.
+        """
         engine = sql.return_engine()
 
         with Session(engine) as session:

@@ -148,7 +148,10 @@ def test_session():
     engine = sql.return_engine()
     session = sessions.SessionInfo.from_config(app_config)
     session.inject_prompt_output(Prompt.Prompt._parse_output(input_parse), input_parse)
+    audio_path = session.file / f'audio_track_2.wav'
+
     session.save()
+    session.delete()
 
 def test_pipeline_build():
     config_file = Path('config.yaml')

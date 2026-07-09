@@ -78,7 +78,7 @@ class PipelineBuilder:
         logger.debug('config after loading:\n{}'.format(self.app_config.model_dump_json()))
 
     def _prompt(self):
-        p = Prompt.Prompt(self.app_config.provider)
+        p = Prompt.Prompt(self.app_config.provider, self.env_config)
         self.add_steps(Prompt=p)
 
     def _session(self):
@@ -86,7 +86,7 @@ class PipelineBuilder:
         self.pipeline.set_session_obj(s)
 
     def _tts(self):
-        t = Tts.TTS(self.app_config.tts)
+        t = Tts.TTS(self.app_config.tts, self.env_config)
         self.add_steps(TTS=t)
 
     def __enter__(self):

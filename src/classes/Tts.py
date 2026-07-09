@@ -1,12 +1,13 @@
 import soundfile as sf
+from pydantic import BaseModel
 from .. import sessions
 from .. import TTS as _TTS
 
 class TTS:
 
-     def __init__(self, config:_TTS.Base.TTSConfig):
+     def __init__(self, config:_TTS.Base.TTSConfig, secrets:type[BaseModel]):
          self.config = config
-         self.tts = _TTS.TTS_REGISTER[config.name](config)
+         self.tts = _TTS.TTS_REGISTER[config.name](config, secrets)
 
      def run(self, session:sessions.SessionInfo):
          scenes = session.script.scenes

@@ -12,3 +12,4 @@ config.yaml
 .idea
 CLAUDE.md
 database.db
+src/files
