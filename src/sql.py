@@ -18,7 +18,6 @@ class Video(SQLModel, table=True):
     key_theme: str
     total_duration_seconds: Optional[int]
     platform: str
-    step: str = "scripted"  # scripted | tts | rendered | uploaded
 
     # style_defaults
     font_family: str
@@ -68,6 +67,7 @@ class GenerationSession(SQLModel, table=True):
     platform: str
     pov: str
 
+    step: str = "init"  # scripted | tts | rendered | uploaded
     status: str = Field(default="pending")  # pending | running | failed | finished
     raw_llm_output: Optional[str] = None
     error_message: Optional[str] = None

@@ -1,6 +1,6 @@
 import pydantic
 from . import config, sessions
-from .classes import Prompt
+from .classes import Prompt, Tts
 from pathlib import Path
 
 import logging
@@ -29,10 +29,11 @@ class Pipeline:
             try:
                 value.run(self.session_obj)
                 logger.debug('Finished step: {}'.format(key))
+                self.session_obj.set_step(key)
                 self.session_obj.save()
             except Exception as e:
                 logger.error('Error running step {}: {}'.format(key, e))
-                self.session_obj.set_error(e)
+                self.session_obj.set_error(str(e))
                 self.session_obj.set_status(sessions.Status.FAILED)
                 raise e
 
@@ -56,6 +57,7 @@ class PipelineBuilder:
             self._config,
             self._session,
             self._prompt,
+            self._tts,
         )
 
     def build(self):
@@ -78,11 +80,14 @@ class PipelineBuilder:
     def _prompt(self):
         p = Prompt.Prompt(self.app_config.provider)
         self.add_steps(Prompt=p)
-        pass
 
     def _session(self):
         s = sessions.SessionInfo.from_config(self.app_config)
         self.pipeline.set_session_obj(s)
+
+    def _tts(self):
+        t = Tts.TTS(self.app_config.tts)
+        self.add_steps(TTS=t)
 
     def __enter__(self):
         return self

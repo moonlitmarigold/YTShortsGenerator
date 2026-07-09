@@ -7,7 +7,9 @@ from src.classes import Prompt
 from src import pipeline
 import yaml
 
-input_parse = '''{
+input_parse = '''
+```json
+{
   "video_metadata": {
     "suggested_title": "Your Code Isn't Your Worth",
     "key_theme": "Burnout is not a personal failure; it is a systemic signal that your energy resources must be managed as carefully as any production deployment.",
@@ -15,7 +17,8 @@ input_parse = '''{
     "platform": "reels"
   },
   "style_defaults": {
-    "font_family": "Inter Semibold",
+    "font_family": "Inter Semibold",FAILED                                                                   [100%]['```json', '{', '  "video_metadata": {', '    "suggested_title": "Stop Judging Yourself For Procrastinating",', '    "key_theme": "Procrastination is not a moral failing or lack of discipline; it is an emotional regulation strategy to avoid temporary feelings of failure.",', '    "total_duration_seconds": 29,', '    "platform": "shorts"', '  },', '  "style_defaults": {', '    "font_family": "Poppins Medium",', '    "font_size": "large",', '    "primary_text_color": "#FFFFFF",', '    "highlight_color": "#34A853",', '    "text_position": "center",', '    "background_overlay": "subtle_dark_gradient"', '  },', '  "scenes": [', '    {', '      "id": 1,', '      "type": "hook",', '      "spoken_text": "You know you should start writing the paper, but your brain feels like hitting a brick wall.",', '      "display_mode": "highlighted_keywords",', '      "on_screen_text": "Should start writing. Feels like a brick wall.",', '      "highlight_words": [', '        {"word": "brick wall", "emphasis": "size_pop"}', '      ],', '      "duration_ms": 3000,', '      "style_override": null', '    },', '    {', '      "id": 2,', '      "type": "quote_core",', '      "spoken_text": "Procrastination isn\'t a failure of discipline. It’s your brain trying to protect you from the temporary feeling of being inadequate.",', '      "display_mode": "word_by_word",', '      "on_screen_text": [', '        "It\'s not lack of discipline.",', '        "It\'s protection.",', '        "From inadequacy."', '      ],', '      "highlight_words": [', '        {"word": "protect", "emphasis": "color_pop"}', '      ],', '      "duration_ms": 4500,', '      "style_override": {', '        "font_size": "xlarge",', '        "primary_text_color": "#FFFFFF"', '      }', '    },', '    {', '      "id": 3,', '      "type": "body",', '      "spoken_text": "You are demanding a perfect first draft. And the gap between \'perfect\' and \'good enough\' is massive—and paralyzing.",', '      "display_mode": "highlighted_keywords",', '      "on_screen_text": "Demanding a perfect first draft. It’s paralyzing.",', '      "highlight_words": [', '        {"word": "paralyzing", "emphasis": "underline"}', '      ],', '      "duration_ms": 5000,', '      "style_override": null', '    },', '    {', '      "id": 4,', '      "type": "body",', '      "spoken_text": "So stop aiming for brilliance. For the next ten minutes, your only goal is to create something so bad it\'s embarrassing.",', '      "display_mode": "highlighted_keywords",', '      "on_screen_text": "Create something so bad... just get words down.",', '      "highlight_words": [', '        {"word": "bad", "emphasis": "shake"}', '      ],', '      "duration_ms": 6000,', '      "style_override": null', '    },', '    {', '      "id": 5,', '      "type": "body",', '      "spoken_text": "Lower the stakes. Just get five random sentences on paper. That\'s it. The pressure is removed.",', '      "display_mode": "full_sentence",', '      "on_screen_text": "Just get five random sentences. That’s enough.",', '      "highlight_words": [', '        {"word": "five", "emphasis": "color_pop"}', '      ],', '      "duration_ms": 5000,', '      "style_override": null', '    },', '    {', '      "id": 6,', '      "type": "call_to_action",', '      "spoken_text": "Next time you feel blocked, remember: the goal is completion, not perfection. Save this video.",', '      "display_mode": "full_sentence",', '      "on_screen_text": "Goal = Completion. Not Perfection. ⬇️",', '      "highlight_words": [', '        {"word": "completion", "emphasis": "size_pop"}', '      ],', '      "duration_ms": 4000,', '      "style_override": null', '    }', '  ],', '  "video_guidance": {', '    "pacing_recommendation": "moderate_with_pauses",', '    "music_genre": "piano_minimal",', '    "music_energy_curve": "gentle build through body scenes, slight swell at quote_core, steady resolve through CTA"', '  }', '}', '```']
+
     "font_size": "medium",
     "primary_text_color": "#FFFFFF",
     "highlight_color": "#9B59B6",
@@ -113,7 +116,9 @@ input_parse = '''{
     "music_genre": "piano_minimal",
     "music_energy_curve": "low, thoughtful intro, subtle swell at quote_core and body 2, fading back to a calm resolve through CTA"
   }
-}'''
+}
+```
+'''
 
 def test_config():
     app_config, env = config.open_config_env()
@@ -143,6 +148,7 @@ def test_session():
     engine = sql.return_engine()
     session = sessions.SessionInfo.from_config(app_config)
     session.inject_prompt_output(Prompt.Prompt._parse_output(input_parse), input_parse)
+    session.save()
 
 def test_pipeline_build():
     config_file = Path('config.yaml')

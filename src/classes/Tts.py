@@ -1,18 +1,16 @@
-import os
 import soundfile as sf
-from kittentts import KittenTTS as KittenModel
-
-from config import ROOT_DIR, get_tts_voice
-
-KITTEN_MODEL = "KittenML/kitten-tts-mini-0.8"
-KITTEN_SAMPLE_RATE = 24000
+from .. import sessions
+from .. import TTS as _TTS
 
 class TTS:
-    def __init__(self) -> None:
-        self._model = KittenModel(KITTEN_MODEL)
-        self._voice = get_tts_voice()
 
-    def synthesize(self, text, output_file=os.path.join(ROOT_DIR, ".mp", "audio.wav")):
-        audio = self._model.generate(text, voice=self._voice)
-        sf.write(output_file, audio, KITTEN_SAMPLE_RATE)
-        return output_file
+     def __init__(self, config:_TTS.Base.TTSConfig):
+         self.config = config
+         self.tts = _TTS.TTS_REGISTER[config.name](config)
+
+     def run(self, session:sessions.SessionInfo):
+         scenes = session.script.scenes
+         for scene in scenes:
+             audio_path = session.file / f'audio_track_{scene.id}.wav'
+             audio = self.tts.audio(scene.spoken_text)
+             sf.write(str(audio_path), audio, self.config.sample_rate)

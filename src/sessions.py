@@ -2,8 +2,10 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import Optional
 import logging
+import shutil
+from pathlib import Path
 
-from sqlmodel import Session
+from sqlmodel import Session, select
 
 from . import config, sql
 from .generation_types import schemas
@@ -32,8 +34,17 @@ class SessionInfo:
     def return_status(self):
         return self.generation_session.status
 
+    @property
+    def file(self):
+        p = Path(__file__).parent / 'files' / str(self.id)
+        p.mkdir(exist_ok=True, parents=True)
+        return p
+
     def set_status(self, status: Status):
         self.generation_session.status = status.value
+
+    def set_step(self, step:str):
+        self.generation_session.step = step
 
     def set_error(self, error: str):
         self.generation_session.error_message = error
@@ -120,3 +131,31 @@ class SessionInfo:
                 session.commit()
 
         return self
+
+    def __del__(self):
+        engine = sql.return_engine()
+
+        with Session(engine) as session:
+            generation_session = session.get(sql.GenerationSession, self.id)
+            if generation_session is None:
+                return
+
+            video = generation_session.video
+            if video is not None:
+                performances = session.exec(
+                    select(sql.VideoPerformance).where(sql.VideoPerformance.video_id == video.id)
+                ).all()
+                for performance in performances:
+                    session.delete(performance)
+
+                for scene in video.scenes:
+                    session.delete(scene)
+
+                session.delete(video)
+
+            session.delete(generation_session)
+            session.commit()
+
+        file_dir = Path(__file__).parent / 'files' / str(self.id)
+        if file_dir.exists():
+            shutil.rmtree(file_dir)

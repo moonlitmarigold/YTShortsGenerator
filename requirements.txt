@@ -22,3 +22,5 @@ pydantic
 pydantic_settings
 yaml
 sqlmodel
+kittentts
+yaml
