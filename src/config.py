@@ -31,8 +31,18 @@ def open_config_env(conf_file:Path | None = None, env_file:Path | None = None):
     env = Secrets(_env_file=env_file)
     return app_config, env
 
+class Metadata(BaseModel):
+    topic: str
+    tone: str
+    target_audience: str
+    video_length_seconds: int
+    platform: generation_types.schemas.Platform
+    pov: generation_types.schemas.POV
+
+
 class AppConfig(BaseModel):
     generation_type: str
+    metadata: Metadata
     provider: Base.ProviderConfig
 
     @field_validator('generation_type', mode='after')
@@ -45,8 +55,10 @@ class AppConfig(BaseModel):
     @model_validator(mode='after')
     def inject_prompt(self):
         generation_obj = generation_types.GENERATION_TYPES[self.generation_type]
-        self.provider.prompt = generation_obj.prompt_file.read_text()
-        self.provider.generation_output = generation_obj.generation_output
+        prompt_text = generation_obj.prompt_file.read_text()
+        for key, value in self.metadata.model_dump(mode='json').items():
+            prompt_text = prompt_text.replace('{{' + key + '}}', str(value))
+        self.provider.prompt = prompt_text
         return self
 
 

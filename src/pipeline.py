@@ -22,18 +22,21 @@ class Pipeline:
     def run(self):
         logger.info('Starting pipeline with {} steps'.format(len(self.steps)))
 
-        self.session_obj.status = sessions.Status.RUNNING
+        self.session_obj.set_status(sessions.Status.RUNNING)
 
         for key, value in self.steps.items():
             logger.debug('Running step: {}'.format(key))
             try:
-                value.run()
+                value.run(self.session_obj)
+                logger.debug('Finished step: {}'.format(key))
+                self.session_obj.save()
             except Exception as e:
                 logger.error('Error running step {}: {}'.format(key, e))
-                self.session_obj.status = sessions.Status.FAILED
+                self.session_obj.set_error(e)
+                self.session_obj.set_status(sessions.Status.FAILED)
                 raise e
 
-        self.session_obj.status = sessions.Status.COMPLETED
+        self.session_obj.set_status(sessions.Status.FINISHED)
     
 class PipelineBuilder:
     
@@ -78,7 +81,7 @@ class PipelineBuilder:
         pass
 
     def _session(self):
-        s = sessions.SessionInfo(self.app_config.generation_type)
+        s = sessions.SessionInfo.from_config(self.app_config)
         self.pipeline.set_session_obj(s)
 
     def __enter__(self):

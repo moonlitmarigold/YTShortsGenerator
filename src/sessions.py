@@ -1,174 +1,122 @@
-import sqlite3
-from dataclasses import dataclass, field, fields
-from datetime import datetime, timezone
+from dataclasses import dataclass, field
 from enum import Enum
-from pathlib import Path
-from uuid import uuid4
-
-from .generation_types.schemas import QuoteOutput
-
+from typing import Optional
 import logging
+
+from sqlmodel import Session
+
+from . import config, sql
+from .generation_types import schemas
+
 logger = logging.getLogger(__name__)
 
 
-def _now() -> datetime:
-    return datetime.now(timezone.utc)
-
-
 class Status(str, Enum):
-    """Lifecycle of a single generation run."""
     PENDING = "pending"
     RUNNING = "running"
-    COMPLETED = "completed"
     FAILED = "failed"
-    UPLOADED = "uploaded"
+    FINISHED = "finished"
 
 
 @dataclass
 class SessionInfo:
-    """One video-generation run. Steps fill in fields as the pipeline progresses,
-    then hand the record to a SessionStore to persist."""
 
-    generation_type: str
-    id: str = field(default_factory=lambda: uuid4().hex)
-    status: Status = Status.PENDING
+    generation_session: sql.GenerationSession
+    script: Optional[schemas.GeneratedVideoScript] = field(default=None)
 
-    # Artifacts produced along the 7-step pipeline
-    title: str | None = None
-    script: str | None = None          # raw JSON blob from the Prompt step
-    output: QuoteOutput | None = None  # parsed/validated Prompt output
-    audio_path: str | None = None      # TTS narration
-    video_path: str | None = None      # assembled 9:16 mp4
-    thumbnail_path: str | None = None
-    youtube_id: str | None = None      # set once uploaded
-    error: str | None = None           # last failure, if any
+    @property
+    def id(self):
+        return self.generation_session.id
 
-    created_at: datetime = field(default_factory=_now)
-    updated_at: datetime = field(default_factory=_now)
+    @property
+    def return_status(self):
+        return self.generation_session.status
 
+    def set_status(self, status: Status):
+        self.generation_session.status = status.value
 
-class SessionStore:
-    """Small sqlite adapter for SessionInfo. `save()` upserts on id, so a step can
-    call it after every stage. Usable as a context manager."""
+    def set_error(self, error: str):
+        self.generation_session.error_message = error
+        self.set_status(Status.FAILED)
 
-    _COLUMNS = [f.name for f in fields(SessionInfo)]
+    @classmethod
+    def from_config(cls, app_config: config.AppConfig) -> "SessionInfo":
+        generation_session = sql.GenerationSession(
+            topic=app_config.metadata.topic,
+            tone=app_config.metadata.tone,
+            target_audience=app_config.metadata.target_audience,
+            video_length_seconds=app_config.metadata.video_length_seconds,
+            platform=app_config.metadata.platform.value,
+            pov=app_config.metadata.pov.value,
+            status=Status.PENDING.value,
+        )
+        return cls(generation_session)
 
-    def __init__(self, db_path: Path | str = "sessions.db"):
-        self.db_path = str(db_path)
-        self.conn = sqlite3.connect(self.db_path)
-        self.conn.row_factory = sqlite3.Row
-        self._create_table()
+    @classmethod
+    def from_sql(cls, generation_session_id: int) -> "SessionInfo":
+        engine = sql.return_engine()
+        with Session(engine) as session:
+            generation_session = session.get(sql.GenerationSession, generation_session_id)
+            if generation_session is None:
+                raise ValueError(f"No generation session with id {generation_session_id}")
+            script = None
+            if generation_session.raw_llm_output:
+                from src.classes import Prompt
+                script = Prompt.Prompt._parse_output(generation_session.raw_llm_output)
+            return cls(generation_session, script)
 
-    def _create_table(self):
-        self.conn.execute(
-            """
-            CREATE TABLE IF NOT EXISTS sessions (
-                id              TEXT PRIMARY KEY,
-                generation_type TEXT NOT NULL,
-                status          TEXT NOT NULL,
-                title           TEXT,
-                script          TEXT,
-                output          TEXT,
-                audio_path      TEXT,
-                video_path      TEXT,
-                thumbnail_path  TEXT,
-                youtube_id      TEXT,
-                error           TEXT,
-                created_at      TEXT NOT NULL,
-                updated_at      TEXT NOT NULL
+    def inject_prompt_output(self, script: schemas.GeneratedVideoScript, raw: str):
+        self.script = script
+        self.generation_session.raw_llm_output = raw
+        self.set_status(Status.FINISHED)
+
+    def _build_video_rows(self) -> tuple[sql.Video, list[sql.Scene]]:
+        script = self.script
+
+        video = sql.Video(
+            suggested_title=script.video_metadata.suggested_title,
+            key_theme=script.video_metadata.key_theme,
+            total_duration_seconds=script.video_metadata.total_duration_seconds,
+            platform=script.video_metadata.platform.value,
+            font_family=script.style_defaults.font_family,
+            font_size=script.style_defaults.font_size,
+            primary_text_color=script.style_defaults.primary_text_color,
+            highlight_color=script.style_defaults.highlight_color,
+            text_position=script.style_defaults.text_position,
+            background_overlay=script.style_defaults.background_overlay,
+            pacing_recommendation=script.video_guidance.pacing_recommendation.value,
+            music_genre=script.video_guidance.music_genre.value,
+            music_energy_curve=script.video_guidance.music_energy_curve,
+            generation_session_id=self.generation_session.id,
+        )
+
+        scenes = [
+            sql.Scene(
+                scene_order=scene.id,
+                type=scene.type.value,
+                spoken_text=scene.spoken_text,
+                display_mode=scene.display_mode.value,
+                on_screen_text=scene.on_screen_text,
+                highlight_words=[hw.model_dump(mode="json") for hw in scene.highlight_words],
+                duration_ms=scene.duration_ms,
+                style_override=scene.style_override,
             )
-            """
-        )
-        self.conn.commit()
+            for scene in script.scenes
+        ]
 
-    @staticmethod
-    def _to_params(session: SessionInfo) -> dict:
-        return {
-            **{c: getattr(session, c) for c in SessionStore._COLUMNS},
-            "status": session.status.value,
-            "output": session.output.model_dump_json() if session.output else None,
-            "created_at": session.created_at.isoformat(),
-            "updated_at": session.updated_at.isoformat(),
-        }
+        return video, scenes
 
-    @staticmethod
-    def _from_row(row: sqlite3.Row) -> SessionInfo:
-        return SessionInfo(
-            id=row["id"],
-            generation_type=row["generation_type"],
-            status=Status(row["status"]),
-            title=row["title"],
-            script=row["script"],
-            output=QuoteOutput.model_validate_json(row["output"]) if row["output"] else None,
-            audio_path=row["audio_path"],
-            video_path=row["video_path"],
-            thumbnail_path=row["thumbnail_path"],
-            youtube_id=row["youtube_id"],
-            error=row["error"],
-            created_at=datetime.fromisoformat(row["created_at"]),
-            updated_at=datetime.fromisoformat(row["updated_at"]),
-        )
+    def save(self):
+        engine = sql.return_engine()
 
-    def save(self, session: SessionInfo) -> SessionInfo:
-        """Insert a new session or update an existing one (matched on id)."""
-        session.updated_at = _now()
-        logger.debug('Saving session {} ({})'.format(session.id, session.status.value))
-        self.conn.execute(
-            """
-            INSERT INTO sessions (
-                id, generation_type, status, title, script, output, audio_path,
-                video_path, thumbnail_path, youtube_id, error, created_at, updated_at
-            ) VALUES (
-                :id, :generation_type, :status, :title, :script, :output, :audio_path,
-                :video_path, :thumbnail_path, :youtube_id, :error, :created_at, :updated_at
-            )
-            ON CONFLICT(id) DO UPDATE SET
-                generation_type = excluded.generation_type,
-                status          = excluded.status,
-                title           = excluded.title,
-                script          = excluded.script,
-                output          = excluded.output,
-                audio_path      = excluded.audio_path,
-                video_path      = excluded.video_path,
-                thumbnail_path  = excluded.thumbnail_path,
-                youtube_id      = excluded.youtube_id,
-                error           = excluded.error,
-                updated_at      = excluded.updated_at
-            """,
-            self._to_params(session),
-        )
-        self.conn.commit()
-        return session
+        with Session(engine, expire_on_commit=False) as session:
+            session.add(self.generation_session)
+            session.commit()
 
-    def get(self, session_id: str) -> SessionInfo | None:
-        row = self.conn.execute(
-            "SELECT * FROM sessions WHERE id = ?", (session_id,)
-        ).fetchone()
-        return self._from_row(row) if row else None
+            if self.script is not None:
+                video, scenes = self._build_video_rows()
+                video.scenes = scenes
+                session.add(video)
+                session.commit()
 
-    def list(self, status: Status | None = None) -> list[SessionInfo]:
-        """All sessions, newest first, optionally filtered by status."""
-        if status is None:
-            rows = self.conn.execute(
-                "SELECT * FROM sessions ORDER BY created_at DESC"
-            ).fetchall()
-        else:
-            rows = self.conn.execute(
-                "SELECT * FROM sessions WHERE status = ? ORDER BY created_at DESC",
-                (status.value,),
-            ).fetchall()
-        return [self._from_row(r) for r in rows]
-
-    def delete(self, session_id: str) -> None:
-        self.conn.execute("DELETE FROM sessions WHERE id = ?", (session_id,))
-        self.conn.commit()
-
-    def close(self) -> None:
-        self.conn.close()
-
-    def __enter__(self):
         return self
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        self.close()
-        return None

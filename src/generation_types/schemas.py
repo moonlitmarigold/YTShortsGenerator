@@ -45,13 +45,11 @@ class MusicGenre(str, Enum):
     epic_trailer = "epic_trailer"
     piano_minimal = "piano_minimal"
 
-
 class VideoMetadata(BaseModel):
     suggested_title: str
     key_theme: str
     total_duration_seconds: Optional[int] = None
     platform: Platform
-
 
 class StyleDefaults(BaseModel):
     font_family: str
@@ -61,11 +59,9 @@ class StyleDefaults(BaseModel):
     text_position: str
     background_overlay: Optional[str] = None
 
-
 class HighlightWord(BaseModel):
     word: str
     emphasis: Emphasis
-
 
 class Scene(BaseModel):
     id: int
@@ -88,7 +84,6 @@ class Scene(BaseModel):
                 )
         return words
 
-
 class VideoGuidance(BaseModel):
     pacing_recommendation: Pacing
     music_genre: MusicGenre
@@ -99,5 +94,4 @@ class GeneratedVideoScript(BaseModel):
     video_metadata: VideoMetadata
     style_defaults: StyleDefaults
     scenes: list[Scene]
-    quote_variants: list[str] = []
     video_guidance: VideoGuidance

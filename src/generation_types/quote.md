@@ -23,7 +23,6 @@ The background visual is a static looping clip (e.g. gameplay footage) — you a
 4. **video_length_seconds** (integer) — target total duration, e.g. 20, 30, 45, 60. Scale the number of body scenes and pacing to fit this.
 5. **platform** (string, one of: `"tiktok"`, `"reels"`, `"shorts"`) — subtly affects caption density and hook style; TikTok tolerates more text on screen, Shorts/Reels favor cleaner minimal captions.
 6. **pov** (string, one of: `"direct_address"`, `"narrator"`) — `direct_address` speaks to "you" throughout; `narrator` is third-person/observational.
-7. **quote_variant_count** (integer, default 1) — if greater than 1, generate that many alternative `quote_core` options inside `quote_variants` for A/B testing, in addition to the one used in the main scene flow.
 
 ## Enums
 
@@ -74,9 +73,6 @@ The background visual is a static looping clip (e.g. gameplay footage) — you a
       "style_override": "object with any style_defaults keys to override for this scene only, or null"
     }
   ],
-  "quote_variants": [
-    "string — alternative quote_core options, only populated if quote_variant_count > 1, otherwise empty array"
-  ],
   "video_guidance": {
     "pacing_recommendation": "one of the pacing_recommendation enum values",
     "music_genre": "one of the music_genre enum values",
@@ -87,7 +83,7 @@ The background visual is a static looping clip (e.g. gameplay footage) — you a
 
 ## Worked Example
 
-**Inputs:** topic="Overcoming procrastination", tone="Encouraging and thoughtful", target_audience="College students", video_length_seconds=25, platform="tiktok", pov="direct_address", quote_variant_count=1
+**Inputs:** topic="Overcoming procrastination", tone="Encouraging and thoughtful", target_audience="College students", video_length_seconds=25, platform="tiktok", pov="direct_address"
 
 **Expected output:**
 
@@ -184,7 +180,6 @@ The background visual is a static looping clip (e.g. gameplay footage) — you a
       "style_override": null
     }
   ],
-  "quote_variants": [],
   "video_guidance": {
     "pacing_recommendation": "moderate_with_pauses",
     "music_genre": "lofi_hiphop",
@@ -201,4 +196,3 @@ Now generate a new output for the following inputs:
 - **video_length_seconds:** {{video_length_seconds}}
 - **platform:** {{platform}}
 - **pov:** {{pov}}
-- **quote_variant_count:** {{quote_variant_count}}
