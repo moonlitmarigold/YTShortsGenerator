@@ -8,6 +8,7 @@ from .providers import Base
 from . import generation_types
 from . import TTS
 from . import Transcribe
+from .utils import Secrets, AudioConfig
 
 def find_config_file() -> Path:
     """Search for config.yaml in the current directory and parent directories."""
@@ -48,6 +49,7 @@ class AppConfig(BaseModel):
     provider: Base.ProviderConfig
     tts: TTS.Base.TTSConfig
     transcribe:Transcribe.Base.TranscribeConfig
+    audio:AudioConfig
 
     @field_validator('generation_type', mode='after')
     @classmethod
@@ -65,12 +67,6 @@ class AppConfig(BaseModel):
         self.provider.prompt = prompt_text
         return self
 
-
-class Secrets(BaseSettings):
-
-    model_config = SettingsConfigDict(env_file='.env', env_file_encoding='utf-8', case_sensitive=False)
-    youtube_api_key: str               # <- from env YOUTUBE_API_KEY, errors if missing
-    elevenlabs_api_key: str | None = None
 
 
         

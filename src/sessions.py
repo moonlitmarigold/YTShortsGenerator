@@ -40,6 +40,15 @@ class SessionInfo:
         p.mkdir(exist_ok=True, parents=True)
         return p
 
+    def audio_path(self, scene_id):
+        return self.file / f'audio_track_{scene_id}.wav'
+
+    def transcribe_path(self, scene_id):
+        return self.file / f'audio_transcribe_{scene_id}.srt'
+
+    def full_audio_path(self):
+        return self.file / 'audio.wav'
+
     def set_status(self, status: Status):
         self.generation_session.status = status.value
 

@@ -21,5 +21,5 @@ class Whisper(Base.BaseTR):
         return self._model
 
     def transcribe(self, audio_file:Path, output_path:Path):
-        result = self._model.transcribe(str(audio_file))
-        result.to_ass(str(output_path))
+        result = self.model.transcribe(str(audio_file))
+        result.to_srt_vtt(str(output_path), segment_level=False, word_level=True)

@@ -1,6 +1,6 @@
 import pydantic
 from . import config, sessions
-from .classes import Prompt, Tts
+from .classes import Prompt, Tts, Transcribe
 from pathlib import Path
 
 import logging
@@ -58,6 +58,7 @@ class PipelineBuilder:
             self._session,
             self._prompt,
             self._tts,
+            self._transcribe,
         )
 
     def build(self):
@@ -88,6 +89,10 @@ class PipelineBuilder:
     def _tts(self):
         t = Tts.TTS(self.app_config.tts, self.env_config)
         self.add_steps(TTS=t)
+
+    def _transcribe(self):
+        t = Transcribe.Transcribe(self.app_config.transcribe, self.env_config)
+        self.add_steps(transcribe=t)
 
     def __enter__(self):
         return self

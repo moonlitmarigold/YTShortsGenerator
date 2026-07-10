@@ -24,4 +24,5 @@ yaml
 sqlmodel
 kittentts
 whisper
-stable-ts[fw]
+stable-ts
+pydub

@@ -12,6 +12,6 @@ class TTS:
      def run(self, session:sessions.SessionInfo):
          scenes = session.script.scenes
          for scene in scenes:
-             audio_path = session.file / f'audio_track_{scene.id}.wav'
+             audio_path = session.audio_path(scene.id)
              audio = self.tts.audio(scene.spoken_text)
              sf.write(str(audio_path), audio, self.config.sample_rate)

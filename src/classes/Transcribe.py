@@ -12,6 +12,6 @@ class Transcribe:
      def run(self, session:sessions.SessionInfo):
          scenes = session.script.scenes
          for scene in scenes:
-             audio_path = session.file / f'audio_track_{scene.id}.wav'
-             output_path = session.file / f'audio_transcribe_{scene.id}.ass'
+             audio_path = session.audio_path(scene.id)
+             output_path = session.transcribe_path(scene.id)
              self.tr.transcribe(audio_path, output_path)
