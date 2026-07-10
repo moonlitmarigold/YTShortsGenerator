@@ -26,9 +26,9 @@ class ProviderConfig(BaseModel):
 @dataclasses.dataclass
 class BaseProvider:
     config: ProviderConfig
+    secrets: type[BaseModel] = None
 
     _fallback_provider_url:str = "" # For the providers to specify their default URL if not provided in the config
-    secrets: type[BaseModel] = dataclasses.field(init=False, default=None)
 
     def provider_url(self) -> str:
         if not self._fallback_provider_url:

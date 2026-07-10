@@ -26,7 +26,7 @@ class TTSConfig(BaseModel):
 class BaseTTS:
 
     config: TTSConfig
-    secrets: type[BaseModel] = dataclasses.field(init=False, default=None)
+    secrets: type[BaseModel] = None
 
     @property
     def models(self):

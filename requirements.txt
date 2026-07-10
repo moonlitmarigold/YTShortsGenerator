@@ -23,4 +23,5 @@ pydantic_settings
 yaml
 sqlmodel
 kittentts
-yaml
+whisper
+stable-ts[fw]

@@ -7,6 +7,7 @@ from pydantic_settings import SettingsConfigDict, BaseSettings
 from .providers import Base
 from . import generation_types
 from . import TTS
+from . import Transcribe
 
 def find_config_file() -> Path:
     """Search for config.yaml in the current directory and parent directories."""
@@ -46,6 +47,7 @@ class AppConfig(BaseModel):
     metadata: Metadata
     provider: Base.ProviderConfig
     tts: TTS.Base.TTSConfig
+    transcribe:Transcribe.Base.TranscribeConfig
 
     @field_validator('generation_type', mode='after')
     @classmethod
