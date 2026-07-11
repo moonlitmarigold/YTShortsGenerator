@@ -25,14 +25,12 @@ class Audio:
         if self.config.music_type not in self.music_types.keys():
             raise ValueError(f'Music Type {self.config.music_type} is not supported, music_types are: {self.music_types.keys()}')
 
-
-
     def music(self, session:sessions.SessionInfo, audio_track:AudioSegment):
         music_type = self.config.music_type
         self.music_types[music_type](session, audio_track)
 
-
     def downloaded(self, session:sessions.SessionInfo, audio_track:AudioSegment):
+        logger.debug('Using Downloaded files for music')
         video_guidance = session.script.video_guidance
         downloaded_files = utils.Downloaded('music')
         files = downloaded_files.get_genre(video_guidance.music_genre.value)
@@ -41,8 +39,11 @@ class Audio:
             combined += AudioSegment.from_file(str(files.__next__()))
             if combined.duration_seconds > audio_track.duration_seconds:
                 break
+        logger.debug(f'Created song background')
         output_path = session.music_path()
-        combined.export(str(output_path))
+
+        res_audio = combined[:audio_track.duration_seconds*1000]
+        res_audio.export(str(output_path))
 
     def jamendo(self, session:sessions.SessionInfo, audio_track:AudioSegment):
         video_guidance = session.script.video_guidance

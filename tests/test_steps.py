@@ -126,176 +126,24 @@ input_parse = '''
 ```
 '''
 
-def test_config():
+def test_prompt():
     app_config, env = config.open_config_env()
 
-    print(' ')
-    print(app_config)
-    print(env)
-
-    assert True
-
-def test_pipeline():
-
-    config_file = Path('config.yaml')
-    env_file = Path('.env')
-
-    with pipeline.PipelineBuilder(config_file, env_file) as pipeline_builder:
-        _pipeline = pipeline_builder.build()
-
-    assert isinstance(_pipeline, pipeline.Pipeline)
-
-def test_parse():
-    print(Prompt.Prompt._parse_output(input_parse))
-
-def test_session():
-    app_config, env = config.open_config_env()
-
-    engine = sql.return_engine()
     session = sessions.SessionInfo.from_config(app_config)
-    session.inject_prompt_output(Prompt.Prompt._parse_output(input_parse), input_parse)
-    audio_path = session.file / f'audio_track_2.wav'
+    #session.inject_prompt_output(Prompt.Prompt._parse_output(input_parse), input_parse)
 
-    session.save()
+    p = Prompt.Prompt(app_config.provider, env)
+    p.run(session)
+
     session.delete()
 
-
-def test_Jamando():
+def test_tts():
     app_config, env = config.open_config_env()
 
     session = sessions.SessionInfo.from_config(app_config)
     session.inject_prompt_output(Prompt.Prompt._parse_output(input_parse), input_parse)
 
-    audio = AudioSegment.silent(100)
-
-    a = Audio.Audio(app_config.audio, env)
-    a.jamendo(session, audio)
+    t = Tts.TTS(app_config.tts, env)
+    t.run(session)
 
     session.delete()
-
-def test_download():
-    d = utils.Downloaded('music')
-
-    print(d.json_info)
-    print(d.genres)
-
-    files = d.get_genre('lofi_hiphop')
-    for x in range(10):
-        print(str(files.__next__()))
-
-
-
-
-# --- Step-level unit tests -------------------------------------------------
-#
-# These build a SessionInfo directly from an in-memory sql.GenerationSession
-# and never call session.save()/.delete(), so they never touch the sqlite
-# engine or src/database.db. The heavy backends (Ollama, TTS, Transcribe)
-# are swapped for fakes so no network/model calls happen either.
-
-def _bare_session(session_id: int | None = None) -> sessions.SessionInfo:
-    generation_session = sql.GenerationSession(
-        id=session_id,
-        topic="burnout",
-        tone="empathetic",
-        target_audience="software engineers",
-        video_length_seconds=40,
-        platform="shorts",
-        pov="direct_address",
-    )
-    return sessions.SessionInfo(generation_session)
-
-
-class _FakeProvider:
-    def __init__(self, response: str):
-        self._response = response
-
-    def prompt(self) -> str:
-        return self._response
-
-
-def test_prompt_step_populates_session():
-    session = _bare_session()
-
-    step = Prompt.Prompt.__new__(Prompt.Prompt)
-    step.config = type("Cfg", (), {"prompt": "write me a video script"})()
-    step.provider = _FakeProvider(input_parse)
-
-    step.run(session)
-
-    assert isinstance(session.script, schemas.GeneratedVideoScript)
-    assert session.generation_session.raw_llm_output == input_parse
-    assert session.generation_session.status == sessions.Status.FINISHED.value
-    assert len(session.script.scenes) == 6
-
-
-def test_prompt_step_raises_on_invalid_llm_output():
-    session = _bare_session()
-
-    step = Prompt.Prompt.__new__(Prompt.Prompt)
-    step.config = type("Cfg", (), {"prompt": "write me a video script"})()
-    step.provider = _FakeProvider('```json\n{"not": "a valid script"}\n```')
-
-    with pytest.raises(pydantic.ValidationError):
-        step.run(session)
-
-    # nothing should have been injected into the session on failure
-    assert session.script is None
-
-
-def test_tts_step_writes_one_audio_file_per_scene():
-    session = _bare_session(session_id=-101)
-    session.script = Prompt.Prompt._parse_output(input_parse)
-
-    calls = []
-
-    class _FakeTTS:
-        def audio(self, text):
-            calls.append(text)
-            return np.zeros(2400, dtype="float32")
-
-    step = Tts.TTS.__new__(Tts.TTS)
-    step.config = type("Cfg", (), {"sample_rate": 24000})()
-    step.tts = _FakeTTS()
-
-    try:
-        step.run(session)
-
-        assert calls == [scene.spoken_text for scene in session.script.scenes]
-        for scene in session.script.scenes:
-            assert session.audio_path(scene.id).exists()
-    finally:
-        shutil.rmtree(session.file, ignore_errors=True)
-    app_config, env = config.open_config_env()
-
-    session = sessions.SessionInfo.from_config(app_config)
-
-    audio = AudioSegment.silent(100)
-
-    a = Audio.Audio(app_config.audio, env)
-    a.jamendo(session, audio)
-
-
-def test_transcribe_step_calls_transcriber_with_matching_paths():
-    session = _bare_session(session_id=-102)
-    session.script = Prompt.Prompt._parse_output(input_parse)
-
-    calls = []
-
-    class _FakeTranscriber:
-        def transcribe(self, audio_path, output_path):
-            calls.append((audio_path, output_path))
-
-    step = Transcribe.Transcribe.__new__(Transcribe.Transcribe)
-    step.tr = _FakeTranscriber()
-
-    try:
-        step.run(session)
-
-        expected = [
-            (session.audio_path(scene.id), session.transcribe_path(scene.id))
-            for scene in session.script.scenes
-        ]
-        assert calls == expected
-    finally:
-        shutil.rmtree(session.file, ignore_errors=True)

@@ -60,6 +60,7 @@ class PipelineBuilder:
             self._prompt,
             self._tts,
             self._transcribe,
+            self._audio,
         )
 
     def build(self):
