@@ -49,6 +49,9 @@ class SessionInfo:
     def full_audio_path(self):
         return self.file / 'audio.wav'
 
+    def music_path(self):
+        return self.file / 'music.mp3'
+
     def set_status(self, status: Status):
         self.generation_session.status = status.value
 

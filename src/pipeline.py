@@ -1,6 +1,6 @@
 import pydantic
 from . import config, sessions
-from .classes import Prompt, Tts, Transcribe
+from .classes import Prompt, Tts, Transcribe, Audio
 from pathlib import Path
 
 import logging
@@ -25,10 +25,10 @@ class Pipeline:
         self.session_obj.set_status(sessions.Status.RUNNING)
 
         for key, value in self.steps.items():
-            logger.debug('Running step: {}'.format(key))
+            logger.info('Running step: {}'.format(key))
             try:
                 value.run(self.session_obj)
-                logger.debug('Finished step: {}'.format(key))
+                logger.info('Finished step: {}'.format(key))
                 self.session_obj.set_step(key)
                 self.session_obj.save()
             except Exception as e:
@@ -38,6 +38,7 @@ class Pipeline:
                 raise e
 
         self.session_obj.set_status(sessions.Status.FINISHED)
+        logger.info('Finished with the pipeline')
     
 class PipelineBuilder:
     
@@ -93,6 +94,10 @@ class PipelineBuilder:
     def _transcribe(self):
         t = Transcribe.Transcribe(self.app_config.transcribe, self.env_config)
         self.add_steps(transcribe=t)
+
+    def _audio(self):
+        a = Audio.Audio(self.app_config.audio, self.env_config)
+        self.add_steps(Audio=a)
 
     def __enter__(self):
         return self

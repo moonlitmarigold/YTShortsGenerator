@@ -2,6 +2,8 @@ import soundfile as sf
 from pydantic import BaseModel
 from .. import sessions
 from .. import Transcribe as _TR
+import logging
+logger = logging.getLogger(__name__)
 
 class Transcribe:
 
@@ -10,8 +12,10 @@ class Transcribe:
          self.tr = _TR.TR_REGISTER[config.name](config, secrets)
 
      def run(self, session:sessions.SessionInfo):
+         logger.debug(f'Running transcription with model {self.config.model}')
          scenes = session.script.scenes
          for scene in scenes:
              audio_path = session.audio_path(scene.id)
              output_path = session.transcribe_path(scene.id)
              self.tr.transcribe(audio_path, output_path)
+             logger.debug(f'Wrote transcription file {scene.id} to {str(output_path)}')
