@@ -53,6 +53,9 @@ class SessionInfo:
     def music_path(self):
         return self.file / 'music.mp3'
 
+    def background_video(self):
+        return self.file / 'background_video.mp4'
+
     def set_status(self, status: Status):
         self.generation_session.status = status.value
 
@@ -82,7 +85,6 @@ class SessionInfo:
             if name.isdigit() and int(name) not in ids:
                 gen_sessions.append(dir)
         print(gen_sessions)
-
 
     @classmethod
     def from_config(cls, app_config: config.AppConfig) -> "SessionInfo":

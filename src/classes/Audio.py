@@ -100,7 +100,7 @@ class Audio:
             if scene.id != last_session_id and self.config.silence != 0:
                 combined += AudioSegment.silent(self.config.silence)
         output_path = session.full_audio_path()
-        print(output_path.suffix)
+
         combined.export(str(output_path))
 
         # music

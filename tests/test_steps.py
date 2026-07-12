@@ -5,6 +5,7 @@ from src.generation_types import schemas
 from src import config, sql, sessions
 from src.classes import Prompt, Tts, Transcribe, Audio, background, subtitles
 import shutil
+from pydub import AudioSegment
 
 input_parse = '''
 ```json
@@ -134,6 +135,28 @@ def add_audio(session:sessions.SessionInfo):
         audio_path = session.audio_path(scene.id)
         shutil.copy(base_audio, audio_path)
 
+def full_audio(session:sessions.SessionInfo):
+    base_audio = Path(__file__).parent / 'test_audio_track.wav'
+    new_audio = AudioSegment.silent(0)
+
+    script = session.script
+    for scene in script.scenes:
+        new_audio += AudioSegment.from_file(str(base_audio))
+
+    new_audio.export(str(session.full_audio_path()))
+
+def test_background():
+    app_config, env, session = init()
+    full_audio(session)
+    print(session.file)
+
+    try:
+        b = background.Background()
+        b.run(session)
+    except Exception as e:
+        raise e
+    finally:
+        session.delete()
 
 def test_prompt():
     app_config, env = config.open_config_env()
@@ -187,13 +210,3 @@ def test_audio():
     finally:
         session.delete()
 
-def test_background():
-    app_config, env, session = init()
-
-    try:
-        b = background.Background()
-        b.run(session)
-    except Exception as e:
-        raise e
-    finally:
-        session.delete()
