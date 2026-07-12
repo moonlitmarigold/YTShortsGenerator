@@ -24,7 +24,7 @@ class Kitten(BaseTTS):
     @property
     def model(self):
         if self._model is None:
-            self._model =  KittenTTS(self.config.tts_model)
+            self._model = KittenTTS(self.config.tts_model)
         return self._model
 
     def audio(self, text:str):

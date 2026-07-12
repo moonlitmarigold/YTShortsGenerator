@@ -45,6 +45,12 @@ class MusicGenre(str, Enum):
     epic_trailer = "epic_trailer"
     piano_minimal = "piano_minimal"
 
+class BackgroundGenre(str, Enum):
+    minecraft_parkour = "minecraft_parkour"
+    subway_surfers = "subway_surfers"
+    cooking = "cooking"
+    satisfying_asmr = "satisfying_asmr"
+
 class VideoMetadata(BaseModel):
     suggested_title: str
     key_theme: str
@@ -88,6 +94,7 @@ class VideoGuidance(BaseModel):
     pacing_recommendation: Pacing
     music_genre: MusicGenre
     music_energy_curve: Optional[str] = None
+    background_genre: BackgroundGenre
 
 
 class GeneratedVideoScript(BaseModel):

@@ -120,7 +120,8 @@ input_parse = '''
   "video_guidance": {
     "pacing_recommendation": "moderate_with_pauses",
     "music_genre": "piano_minimal",
-    "music_energy_curve": "low, thoughtful intro, subtle swell at quote_core and body 2, fading back to a calm resolve through CTA"
+    "music_energy_curve": "low, thoughtful intro, subtle swell at quote_core and body 2, fading back to a calm resolve through CTA",
+    "background_genre": "satisfying_asmr"
   }
 }
 ```

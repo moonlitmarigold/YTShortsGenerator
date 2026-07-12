@@ -6,6 +6,7 @@ import shutil
 from pathlib import Path
 
 from sqlmodel import Session, select
+from sqlalchemy.orm import selectinload
 
 from . import config, sql
 from .generation_types import schemas
@@ -62,6 +63,27 @@ class SessionInfo:
         self.generation_session.error_message = error
         self.set_status(Status.FAILED)
 
+    @staticmethod
+    def all_sessions_id():
+        engine = sql.return_engine()
+        with Session(engine) as s:
+             statement = select(sql.GenerationSession)
+             every_session = s.exec(statement)
+             ids = [x.id for x in every_session]
+        return ids
+
+    @staticmethod
+    def delete_stray_dirs():
+        ids = SessionInfo.all_sessions_id()
+        p = Path(__file__).parent / 'files'
+        gen_sessions = list()
+        for dir in p.iterdir():
+            name = dir.name
+            if name.isdigit() and int(name) not in ids:
+                gen_sessions.append(dir)
+        print(gen_sessions)
+
+
     @classmethod
     def from_config(cls, app_config: config.AppConfig) -> "SessionInfo":
         generation_session = sql.GenerationSession(
@@ -79,13 +101,27 @@ class SessionInfo:
     def from_sql(cls, generation_session_id: int) -> "SessionInfo":
         engine = sql.return_engine()
         with Session(engine) as session:
-            generation_session = session.get(sql.GenerationSession, generation_session_id)
+            statement = (
+                select(sql.GenerationSession)
+                .where(sql.GenerationSession.id == generation_session_id)
+                .options(selectinload(sql.GenerationSession.video).selectinload(sql.Video.scenes))
+            )
+            generation_session = session.exec(statement).first()
             if generation_session is None:
                 raise ValueError(f"No generation session with id {generation_session_id}")
+
             script = None
             if generation_session.raw_llm_output:
                 from src.classes import Prompt
-                script = Prompt.Prompt._parse_output(generation_session.raw_llm_output)
+                try:
+                    script = Prompt.Prompt._parse_output(generation_session.raw_llm_output)
+                except Exception:
+                    logger.warning(
+                        "Session %s has raw_llm_output that failed to parse; loading without a script",
+                        generation_session_id, exc_info=True,
+                    )
+
+            session.expunge(generation_session)
             return cls(generation_session, script)
 
     def inject_prompt_output(self, script: schemas.GeneratedVideoScript, raw: str):
@@ -110,6 +146,7 @@ class SessionInfo:
             pacing_recommendation=script.video_guidance.pacing_recommendation.value,
             music_genre=script.video_guidance.music_genre.value,
             music_energy_curve=script.video_guidance.music_energy_curve,
+            background_genre=script.video_guidance.background_genre.value,
             generation_session_id=self.generation_session.id,
         )
 
@@ -150,30 +187,34 @@ class SessionInfo:
         Not implemented as __del__: that hook fires whenever Python garbage-collects
         the object (e.g. end of any function scope), which was silently wiping rows
         right after save() persisted them.
+
+        File cleanup runs in `finally` so that a missing/already-deleted DB row (or a
+        failure partway through the cascade) never leaves an orphaned src/files/<id> dir.
         """
         engine = sql.return_engine()
-
-        with Session(engine) as session:
-            generation_session = session.get(sql.GenerationSession, self.id)
-            if generation_session is None:
-                return
-
-            video = generation_session.video
-            if video is not None:
-                performances = session.exec(
-                    select(sql.VideoPerformance).where(sql.VideoPerformance.video_id == video.id)
-                ).all()
-                for performance in performances:
-                    session.delete(performance)
-
-                for scene in video.scenes:
-                    session.delete(scene)
-
-                session.delete(video)
-
-            session.delete(generation_session)
-            session.commit()
-
         file_dir = Path(__file__).parent / 'files' / str(self.id)
-        if file_dir.exists():
-            shutil.rmtree(file_dir)
+
+        try:
+            with Session(engine) as session:
+                generation_session = session.get(sql.GenerationSession, self.id)
+                if generation_session is None:
+                    return
+
+                video = generation_session.video
+                if video is not None:
+                    performances = session.exec(
+                        select(sql.VideoPerformance).where(sql.VideoPerformance.video_id == video.id)
+                    ).all()
+                    for performance in performances:
+                        session.delete(performance)
+
+                    for scene in video.scenes:
+                        session.delete(scene)
+
+                    session.delete(video)
+
+                session.delete(generation_session)
+                session.commit()
+        finally:
+            if file_dir.exists():
+                shutil.rmtree(file_dir)

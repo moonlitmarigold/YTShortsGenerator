@@ -8,9 +8,12 @@ def return_engine():
     p = Path(__file__).parent / 'database.db'
     if not p.exists():
         p.touch()
-    engine = create_engine(f'sqlite:///{str(p)}')
+    engine = create_engine(f'sqlite:///{str(p)}', connect_args={"timeout": 30})
+    with engine.connect() as conn:
+        conn.exec_driver_sql("PRAGMA journal_mode=WAL")
     SQLModel.metadata.create_all(engine)
     return engine
+
 
 class Video(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
@@ -31,6 +34,7 @@ class Video(SQLModel, table=True):
     pacing_recommendation: str
     music_genre: str
     music_energy_curve: Optional[str] = None
+    background_genre: str
 
     render_status: str = "not_rendered"
     created_at: datetime = Field(default_factory=datetime.utcnow)

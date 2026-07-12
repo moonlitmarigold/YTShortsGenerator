@@ -93,7 +93,6 @@ class Audio:
         combined = AudioSegment.silent(0)
         for scene in scenes:
             path = session.audio_path(scene.id)
-
             if combined is None:
                 combined = AudioSegment.from_file(str(path))
             else:
@@ -101,7 +100,8 @@ class Audio:
             if scene.id != last_session_id and self.config.silence != 0:
                 combined += AudioSegment.silent(self.config.silence)
         output_path = session.full_audio_path()
-        combined.export(str(output_path), format=output_path.suffix)
+        print(output_path.suffix)
+        combined.export(str(output_path))
 
         # music
         self.music(session, combined)

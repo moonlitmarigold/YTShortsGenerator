@@ -3,7 +3,7 @@ import shutil
 from pathlib import Path
 from src.generation_types import schemas
 from src import config, sql, sessions
-from src.classes import Prompt, Tts, Transcribe, Audio
+from src.classes import Prompt, Tts, Transcribe, Audio, background, subtitles
 import shutil
 
 input_parse = '''
@@ -113,7 +113,8 @@ input_parse = '''
   "video_guidance": {
     "pacing_recommendation": "moderate_with_pauses",
     "music_genre": "piano_minimal",
-    "music_energy_curve": "low, thoughtful intro, subtle swell at quote_core and body 2, fading back to a calm resolve through CTA"
+    "music_energy_curve": "low, thoughtful intro, subtle swell at quote_core and body 2, fading back to a calm resolve through CTA",
+    "background_genre": "satisfying_asmr"
   }
 }
 ```
@@ -181,6 +182,17 @@ def test_audio():
     try:
         audio = Audio.Audio(app_config.audio, env)
         audio.run(session)
+    except Exception as e:
+        raise e
+    finally:
+        session.delete()
+
+def test_background():
+    app_config, env, session = init()
+
+    try:
+        b = background.Background()
+        b.run(session)
     except Exception as e:
         raise e
     finally:

@@ -1,28 +1,13 @@
-wheel
-termcolor
-schedule
-requests
-kittentts @ https://github.com/KittenML/KittenTTS/releases/download/0.8.1/kittentts-0.8.1-py3-none-any.whl
-soundfile
-prettytable
-webdriver_manager
-selenium_firefox
-selenium
-ollama
-moviepy
-Pillow>=10.0.0
-yagmail
-assemblyai
-faster-whisper
-srt_equalizer
-undetected_chromedriver
-platformdirs
-
 pydantic
 pydantic_settings
-yaml
+pyyaml
 sqlmodel
-kittentts
+kittentts @ https://github.com/KittenML/KittenTTS/releases/download/0.8/kittentts-0.8.0-py3-none-any.whl
 whisper
 stable-ts
 pydub
+#pytest-xdist
+moviepy
+ollama
+
+#SubTextHighlight
