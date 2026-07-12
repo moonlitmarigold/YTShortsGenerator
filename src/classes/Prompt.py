@@ -4,6 +4,7 @@ import json
 import logging
 logger = logging.getLogger(__name__)
 import re
+from pydantic import ValidationError
 
 class Prompt:
 
@@ -103,11 +104,20 @@ class Prompt:
 
     def run(self, session:sessions.SessionInfo):
         logger.debug('Prompt content: %s', self.config.prompt)
-        response = self.provider.prompt()
+        num_trys = 0
+        while True:
+            response = self.provider.prompt()
+            try:
+                script = self._parse_output(response)
+                break
+            except ValidationError as val_error:
+                num_trys += 1
+                logger.error('The AI has not been able to create the config the right way, will rerun the process')
+                if num_trys == 3:
+                    logger.error('The Ai was unable to deliver the right response after 3 attempts. Stopping the script.')
+                    raise RuntimeError('The Ai was unable to deliver the right response after 3 attempts. Stopping the script.')
 
-        script = self._parse_output(response)
         logger.debug('LLM Response: %s', script.model_dump())
-
         session.inject_prompt_output(script, response)
 
 
