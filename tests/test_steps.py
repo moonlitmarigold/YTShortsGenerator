@@ -1,17 +1,10 @@
 import os
 import shutil
 from pathlib import Path
-import sys
-import numpy as np
-import pydantic
-import pytest
-from src import config, sql, sessions
-from src.providers import Ollama
-from src.classes import Prompt, Tts, Transcribe, Audio
 from src.generation_types import schemas
-from src import pipeline, utils
-import yaml
-from pydub import AudioSegment
+from src import config, sql, sessions
+from src.classes import Prompt, Tts, Transcribe, Audio
+import shutil
 
 input_parse = '''
 ```json
@@ -126,24 +119,69 @@ input_parse = '''
 ```
 '''
 
+def init():
+    app_config, env = config.open_config_env()
+
+    session = sessions.SessionInfo.from_config(app_config)
+    session.inject_prompt_output(Prompt.Prompt._parse_output(input_parse), input_parse)
+    return app_config, env, session
+
+def add_audio(session:sessions.SessionInfo):
+    script = session.script
+    base_audio = Path(__file__).parent / 'test_audio_track.wav'
+    for scene in script.scenes:
+        audio_path = session.audio_path(scene.id)
+        shutil.copy(base_audio, audio_path)
+
+
 def test_prompt():
     app_config, env = config.open_config_env()
 
     session = sessions.SessionInfo.from_config(app_config)
     #session.inject_prompt_output(Prompt.Prompt._parse_output(input_parse), input_parse)
-
-    p = Prompt.Prompt(app_config.provider, env)
-    p.run(session)
-
-    session.delete()
+    try:
+        p = Prompt.Prompt(app_config.provider, env)
+        p.run(session)
+    except Exception as e:
+        raise e
+    finally:
+        session.delete()
 
 def test_tts():
-    app_config, env = config.open_config_env()
+    app_config, env, session = init()
 
-    session = sessions.SessionInfo.from_config(app_config)
-    session.inject_prompt_output(Prompt.Prompt._parse_output(input_parse), input_parse)
+    try:
+        t = Tts.TTS(app_config.tts, env)
+        t.run(session)
+    except Exception as e:
+        raise e
+    finally:
+        session.delete()
 
-    t = Tts.TTS(app_config.tts, env)
-    t.run(session)
 
-    session.delete()
+def test_transcribe():
+    app_config, env, session = init()
+    # inject audio before running
+    add_audio(session)
+
+    try:
+        tr = Transcribe.Transcribe(app_config.transcribe, env)
+        tr.run(session)
+
+        session.delete()
+    except Exception as e:
+        raise e
+    finally:
+        session.delete()
+
+
+def test_audio():
+    app_config, env, session = init()
+    add_audio(session)
+    try:
+        audio = Audio.Audio(app_config.audio, env)
+        audio.run(session)
+    except Exception as e:
+        raise e
+    finally:
+        session.delete()
