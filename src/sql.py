@@ -1,6 +1,6 @@
 from sqlmodel import SQLModel, Field, Relationship, create_engine
 from sqlalchemy import Column, JSON
-from typing import Optional, Union
+from typing import Optional
 from datetime import datetime
 from pathlib import Path
 
@@ -19,16 +19,26 @@ class Video(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     suggested_title: str
     key_theme: str
+    video_description: Optional[str] = None
+    tags: list[str] = Field(default=[], sa_column=Column(JSON))
     total_duration_seconds: Optional[int]
     platform: str
 
     # style_defaults
     font_family: str
-    font_size: str
+    font_size: int
     primary_text_color: str
     highlight_color: str
     text_position: str
-    background_overlay: Optional[str] = None
+    background_color: Optional[str] = None
+
+    # style_defaults.highlighting
+    highlight_enabled: bool = True
+    highlight_word_max: Optional[int] = None
+    highlight_as_borders: bool = False
+    highlight_fade_ms: Optional[tuple[int, int]] = Field(default=None, sa_column=Column(JSON))
+    highlight_appear: bool = False
+    highlight_font_size: Optional[int] = None
 
     # video_guidance
     pacing_recommendation: str
@@ -50,9 +60,6 @@ class Scene(SQLModel, table=True):
     scene_order: int
     type: str
     spoken_text: str
-    display_mode: str
-    on_screen_text: Union[str, list[str]] = Field(sa_column=Column(JSON))
-    highlight_words: list[dict] = Field(default=[], sa_column=Column(JSON))
     duration_ms: int
     style_override: Optional[dict] = Field(default=None, sa_column=Column(JSON))
 

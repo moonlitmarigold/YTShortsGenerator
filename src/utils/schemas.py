@@ -1,7 +1,7 @@
 # schemas.py
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel
 from enum import Enum
-from typing import Union, Optional
+from typing import Optional
 
 class Platform(str, Enum):
     tiktok = "tiktok"
@@ -11,19 +11,6 @@ class Platform(str, Enum):
 class POV(str, Enum):
     direct_address = "direct_address"
     narrator = "narrator"
-
-class DisplayMode(str, Enum):
-    full_sentence = "full_sentence"
-    highlighted_keywords = "highlighted_keywords"
-    word_by_word = "word_by_word"
-    keyword_only = "keyword_only"
-
-class Emphasis(str, Enum):
-    color_pop = "color_pop"
-    size_pop = "size_pop"
-    underline = "underline"
-    shake = "shake"
-    none = "none"
 
 class SceneType(str, Enum):
     hook = "hook"
@@ -54,41 +41,41 @@ class BackgroundGenre(str, Enum):
 class VideoMetadata(BaseModel):
     suggested_title: str
     key_theme: str
+    video_description: Optional[str] = None
+    tags: list[str] = []
     total_duration_seconds: Optional[int] = None
     platform: Platform
 
+class HighlightConfig(BaseModel):
+    """Video-wide, locked-for-the-whole-video highlighting behavior.
+
+    Mirrors the SubTextHighlight library's SubtitleConfig/StyleConfig options
+    (https://github.com/moonlitmarigold/SubTextHighlight) so it can be passed
+    through to the renderer near verbatim. Word selection itself is no longer
+    authored by the AI - it's derived downstream from transcription timestamps.
+    """
+    enabled: bool = True
+    word_max: Optional[int] = None
+    as_borders: bool = False
+    fade_ms: Optional[tuple[int, int]] = None
+    appear: bool = False
+    font_size: Optional[int] = None
+
 class StyleDefaults(BaseModel):
     font_family: str
-    font_size: str
+    font_size: int
     primary_text_color: str
     highlight_color: str
     text_position: str
-    background_overlay: Optional[str] = None
-
-class HighlightWord(BaseModel):
-    word: str
-    emphasis: Emphasis
+    background_color: Optional[str] = None
+    highlighting: HighlightConfig
 
 class Scene(BaseModel):
     id: int
     type: SceneType
     spoken_text: str
-    display_mode: DisplayMode
-    on_screen_text: Union[str, list[str]]
-    highlight_words: list[HighlightWord] = []
     duration_ms: int
     style_override: Optional[dict] = None
-
-    @field_validator("highlight_words")
-    @classmethod
-    def words_must_appear_in_spoken_text(cls, words, info):
-        spoken = info.data.get("spoken_text", "").lower()
-        for hw in words:
-            if hw.word.lower() not in spoken:
-                raise ValueError(
-                    f"highlight word '{hw.word}' not found verbatim in spoken_text"
-                )
-        return words
 
 class VideoGuidance(BaseModel):
     pacing_recommendation: Pacing

@@ -1,6 +1,5 @@
-from pathlib import Path
 import dataclasses
-from . import schemas
+from pathlib import Path
 
 @dataclasses.dataclass
 class GenerationType:

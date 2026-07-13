@@ -9,7 +9,7 @@ from sqlmodel import Session, select
 from sqlalchemy.orm import selectinload
 
 from . import config, sql
-from .generation_types import schemas
+from utils import schemas
 
 logger = logging.getLogger(__name__)
 
@@ -55,6 +55,9 @@ class SessionInfo:
 
     def background_video(self):
         return self.file / 'background_video.mp4'
+
+    def prompt_file(self):
+        return self.file / 'prompt.md'
 
     def set_status(self, status: Status):
         self.generation_session.status = status.value
@@ -134,9 +137,13 @@ class SessionInfo:
     def _build_video_rows(self) -> tuple[sql.Video, list[sql.Scene]]:
         script = self.script
 
+        highlighting = script.style_defaults.highlighting
+
         video = sql.Video(
             suggested_title=script.video_metadata.suggested_title,
             key_theme=script.video_metadata.key_theme,
+            video_description=script.video_metadata.video_description,
+            tags=script.video_metadata.tags,
             total_duration_seconds=script.video_metadata.total_duration_seconds,
             platform=script.video_metadata.platform.value,
             font_family=script.style_defaults.font_family,
@@ -144,7 +151,13 @@ class SessionInfo:
             primary_text_color=script.style_defaults.primary_text_color,
             highlight_color=script.style_defaults.highlight_color,
             text_position=script.style_defaults.text_position,
-            background_overlay=script.style_defaults.background_overlay,
+            background_color=script.style_defaults.background_color,
+            highlight_enabled=highlighting.enabled,
+            highlight_word_max=highlighting.word_max,
+            highlight_as_borders=highlighting.as_borders,
+            highlight_fade_ms=highlighting.fade_ms,
+            highlight_appear=highlighting.appear,
+            highlight_font_size=highlighting.font_size,
             pacing_recommendation=script.video_guidance.pacing_recommendation.value,
             music_genre=script.video_guidance.music_genre.value,
             music_energy_curve=script.video_guidance.music_energy_curve,
@@ -157,9 +170,6 @@ class SessionInfo:
                 scene_order=scene.id,
                 type=scene.type.value,
                 spoken_text=scene.spoken_text,
-                display_mode=scene.display_mode.value,
-                on_screen_text=scene.on_screen_text,
-                highlight_words=[hw.model_dump(mode="json") for hw in scene.highlight_words],
                 duration_ms=scene.duration_ms,
                 style_override=scene.style_override,
             )

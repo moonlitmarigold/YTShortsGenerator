@@ -3,12 +3,11 @@ import os
 from pathlib import Path
 import yaml
 from pydantic import BaseModel, Field, field_validator, model_validator
-from pydantic_settings import SettingsConfigDict, BaseSettings
 from .providers import Base
-from . import generation_types
+from .generation_types import GENERATION_TYPES
 from . import TTS
 from . import Transcribe
-from .utils import Secrets, AudioConfig
+from .utils import Secrets, AudioConfig, schemas
 
 def find_config_file() -> Path:
     """Search for config.yaml in the current directory and parent directories."""
@@ -39,8 +38,8 @@ class Metadata(BaseModel):
     tone: str
     target_audience: str
     video_length_seconds: int
-    platform: generation_types.schemas.Platform
-    pov: generation_types.schemas.POV
+    platform: schemas.Platform
+    pov: schemas.POV
 
 
 class AppConfig(BaseModel):
@@ -54,13 +53,13 @@ class AppConfig(BaseModel):
     @field_validator('generation_type', mode='after')
     @classmethod
     def check_generation_type(cls, value:str):
-        if value not in generation_types.GENERATION_TYPES.keys():
+        if value not in GENERATION_TYPES.keys():
             raise ValueError('Generation type {} is not supported'.format(value))
         return value
 
     @model_validator(mode='after')
     def inject_prompt(self):
-        generation_obj = generation_types.GENERATION_TYPES[self.generation_type]
+        generation_obj = GENERATION_TYPES[self.generation_type]
         prompt_text = generation_obj.prompt_file.read_text()
         for key, value in self.metadata.model_dump(mode='json').items():
             prompt_text = prompt_text.replace('{{' + key + '}}', str(value))

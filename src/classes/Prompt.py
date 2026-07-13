@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from .. import providers, generation_types, sessions
+from .. import providers, sessions
 import json
 import logging
 logger = logging.getLogger(__name__)
@@ -19,7 +19,7 @@ class Prompt:
     @staticmethod
     def _parse_output(output:str):
         clean_output = Prompt.clean_and_parse_json(output)
-        return generation_types.schemas.GeneratedVideoScript.model_validate(clean_output)
+        return utils.schemas.GeneratedVideoScript.model_validate(clean_output)
 
     @staticmethod
     def clean_and_parse_json(raw: str) -> dict:
