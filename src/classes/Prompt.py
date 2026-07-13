@@ -5,6 +5,7 @@ import logging
 logger = logging.getLogger(__name__)
 import re
 from pydantic import ValidationError
+from .. import utils
 
 class Prompt:
 
@@ -17,9 +18,10 @@ class Prompt:
         return _provider(self.config, secrets)
 
     @staticmethod
-    def _parse_output(output:str):
+    def _parse_output(output:str, fonts:list[str] | None = None):
         clean_output = Prompt.clean_and_parse_json(output)
-        return utils.schemas.GeneratedVideoScript.model_validate(clean_output)
+        context = {"fonts": fonts} if fonts else None
+        return utils.schemas.GeneratedVideoScript.model_validate(clean_output, context=context)
 
     @staticmethod
     def clean_and_parse_json(raw: str) -> dict:
@@ -103,12 +105,14 @@ class Prompt:
 
 
     def run(self, session:sessions.SessionInfo):
-        logger.debug('Prompt content: %s', self.config.prompt)
+        prompt_text = session.prompt_file().read_text()
+        fonts = utils.fonts.list_font_families()
+        logger.debug('Prompt content: %s', prompt_text)
         num_trys = 0
         while True:
-            response = self.provider.prompt()
+            response = self.provider.prompt(prompt_text)
             try:
-                script = self._parse_output(response)
+                script = self._parse_output(response, fonts)
                 break
             except ValidationError as val_error:
                 num_trys += 1

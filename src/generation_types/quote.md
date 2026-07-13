@@ -17,6 +17,7 @@ The background visual is a static looping clip (e.g. gameplay footage). You choo
 - For this quote-video generation type specifically, `style_defaults.highlighting.enabled` **must always be `true`** — quote videos always show highlighted keywords.
 - `video_metadata.tags` should be 3–8 relevant, lowercase, no-`#` keywords (platform hashtags are added later downstream).
 - `video_metadata.video_description` is a short (1–3 sentence) platform post description/caption — a hook line plus an optional soft call-to-action. Leave it `null` if you have nothing worth adding beyond the title.
+- `style_defaults.font_family` **must be picked verbatim from the Available Fonts list below** — do not invent a font name that isn't listed there, it will not render correctly.
 
 ## Input Parameters
 
@@ -49,6 +50,12 @@ A single, locked-for-the-whole-video set of choices controlling the automatic wo
 - `appear` (boolean) — `true` makes words appear cumulatively rather than replacing each other.
 - `font_size` (integer or `null`) — font size in points used specifically for highlighted words (leave `null` to use `style_defaults.font_size`).
 
+## Available Fonts
+
+`style_defaults.font_family` (and any `font_family` inside a scene's `style_override`) must be one of these, verbatim:
+
+{{available_fonts}}
+
 ## JSON Schema
 
 ```json
@@ -62,7 +69,7 @@ A single, locked-for-the-whole-video set of choices controlling the automatic wo
     "platform": "tiktok | reels | shorts"
   },
   "style_defaults": {
-    "font_family": "string, e.g. 'Montserrat Bold'",
+    "font_family": "string, must be one of the Available Fonts listed above",
     "font_size": "integer, font size in points, e.g. 48",
     "primary_text_color": "string, hex code",
     "highlight_color": "string, hex code",
@@ -112,7 +119,7 @@ A single, locked-for-the-whole-video set of choices controlling the automatic wo
     "platform": "tiktok"
   },
   "style_defaults": {
-    "font_family": "Montserrat Bold",
+    "font_family": "The Bold Font",
     "font_size": 48,
     "primary_text_color": "#FFFFFF",
     "highlight_color": "#FFD700",

@@ -1,6 +1,6 @@
 from pathlib import Path
 from src import config, sessions
-from src.classes import Prompt, Tts, Transcribe, Audio, background
+from src.classes import Prompt, Tts, Transcribe, Audio, background, Planner
 import shutil
 from pydub import AudioSegment
 
@@ -130,12 +130,19 @@ def test_prompt():
     session = sessions.SessionInfo.from_config(app_config)
     #session.inject_prompt_output(Prompt.Prompt._parse_output(input_parse), input_parse)
     try:
+        pl = Planner.Planner(
+            app_config.generation_type,
+            app_config.metadata,
+            env
+        )
+        pl.run(session)
         p = Prompt.Prompt(app_config.provider, env)
         p.run(session)
     except Exception as e:
         raise e
     finally:
-        session.delete()
+        pass
+        #session.delete()
 
 def test_tts():
     app_config, env, session = init()

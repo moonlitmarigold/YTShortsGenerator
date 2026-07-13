@@ -1,5 +1,6 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from pydantic import BaseModel
+from . import schemas
 
 class Secrets(BaseSettings):
 
@@ -12,3 +13,11 @@ class AudioConfig(BaseModel):
 
     silence:int
     music_type:str
+
+class Metadata(BaseModel):
+    topic: str
+    tone: str
+    target_audience: str
+    video_length_seconds: int
+    platform: schemas.Platform
+    pov: schemas.POV

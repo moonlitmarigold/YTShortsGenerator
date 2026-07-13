@@ -1,5 +1,5 @@
 # schemas.py
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
 from enum import Enum
 from typing import Optional
 
@@ -69,6 +69,14 @@ class StyleDefaults(BaseModel):
     text_position: str
     background_color: Optional[str] = None
     highlighting: HighlightConfig
+
+    @field_validator("font_family", mode="after")
+    @classmethod
+    def font_family_must_be_allowed(cls, value, info):
+        allowed = (info.context or {}).get("fonts") if info.context else None
+        if allowed and value not in allowed:
+            raise ValueError(f"font_family '{value}' is not in the allowed fonts list: {allowed}")
+        return value
 
 class Scene(BaseModel):
     id: int

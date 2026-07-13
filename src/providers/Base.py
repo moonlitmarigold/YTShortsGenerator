@@ -14,7 +14,6 @@ class ProviderConfig(BaseModel):
     model: str
     url: str = "http://127.0.0.1:11434"  # the fallback lives here now
     num_ctx: int = Field(default=8192, ge=8192)
-    prompt: str | None = None  # inject after load
 
     @field_validator('name', mode='after')
     @classmethod
@@ -45,6 +44,6 @@ class BaseProvider:
     def model(self):
         return self.config.model
 
-    def prompt(self) -> str:
+    def prompt(self, prompt:str) -> str:
         raise NotImplementedError("Subclasses must implement the prompt method")
 

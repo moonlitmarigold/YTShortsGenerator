@@ -1,6 +1,6 @@
 import pydantic
 from . import config, sessions
-from .classes import Prompt, Tts, Transcribe, Audio
+from .classes import Prompt, Tts, Transcribe, Audio, Planner
 from pathlib import Path
 
 import logging
@@ -57,6 +57,7 @@ class PipelineBuilder:
         return (
             self._config,
             self._session,
+            self.plan,
             self._prompt,
             self._tts,
             self._transcribe,
@@ -99,6 +100,14 @@ class PipelineBuilder:
     def _audio(self):
         a = Audio.Audio(self.app_config.audio, self.env_config)
         self.add_steps(Audio=a)
+
+    def plan(self):
+        p = Planner.Planner(
+            self.app_config.generation_type,
+            self.app_config.metadata,
+            self.env_config
+        )
+        self.add_steps(Planner=p)
 
     def __enter__(self):
         return self

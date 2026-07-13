@@ -7,7 +7,7 @@ from .providers import Base
 from .generation_types import GENERATION_TYPES
 from . import TTS
 from . import Transcribe
-from .utils import Secrets, AudioConfig, schemas
+from .utils import Secrets, AudioConfig, schemas, extra_configs
 
 def find_config_file() -> Path:
     """Search for config.yaml in the current directory and parent directories."""
@@ -33,18 +33,10 @@ def open_config_env(conf_file:Path | None = None, env_file:Path | None = None):
     env = Secrets(_env_file=env_file)
     return app_config, env
 
-class Metadata(BaseModel):
-    topic: str
-    tone: str
-    target_audience: str
-    video_length_seconds: int
-    platform: schemas.Platform
-    pov: schemas.POV
-
 
 class AppConfig(BaseModel):
     generation_type: str
-    metadata: Metadata
+    metadata: extra_configs.Metadata
     provider: Base.ProviderConfig
     tts: TTS.Base.TTSConfig
     transcribe:Transcribe.Base.TranscribeConfig
@@ -56,15 +48,6 @@ class AppConfig(BaseModel):
         if value not in GENERATION_TYPES.keys():
             raise ValueError('Generation type {} is not supported'.format(value))
         return value
-
-    @model_validator(mode='after')
-    def inject_prompt(self):
-        generation_obj = GENERATION_TYPES[self.generation_type]
-        prompt_text = generation_obj.prompt_file.read_text()
-        for key, value in self.metadata.model_dump(mode='json').items():
-            prompt_text = prompt_text.replace('{{' + key + '}}', str(value))
-        self.provider.prompt = prompt_text
-        return self
 
 
 

@@ -27,12 +27,12 @@ class Ollama(BaseProvider):
     def _client(self) -> ollama.Client:
         return ollama.Client(host=self.provider_url())
 
-    def prompt(self) -> str:
+    def prompt(self, prompt_text:str) -> str:
         response = self._client.chat(
             model=self.model,
             messages=[
                 {"role": "user",
-                 "content": self.config.prompt}
+                 "content":prompt_text}
             ],
             options={"num_ctx": self.num_ctx},
         )
