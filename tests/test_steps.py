@@ -1,6 +1,6 @@
 from pathlib import Path
 from src import config, sessions
-from src.classes import Prompt, Tts, Transcribe, Audio, background, Planner
+from src.classes import Prompt, Tts, Transcribe, Audio, background, Planner, subtitles
 import shutil
 from pydub import AudioSegment
 
@@ -21,7 +21,7 @@ input_parse = '''
     "primary_text_color": "#FFFFFF",
     "highlight_color": "#9B59B6",
     "text_position": "center",
-    "background_color": "subtle_dark_gradient",
+    "background_color": "#1A1A1A",
     "highlighting": {
       "enabled": true,
       "word_max": 0,
@@ -101,6 +101,9 @@ def add_audio(session:sessions.SessionInfo):
         audio_path = session.audio_path(scene.id)
         shutil.copy(base_audio, audio_path)
 
+def add_transcript(session:sessions.SessionInfo):
+    pass
+
 def full_audio(session:sessions.SessionInfo):
     base_audio = Path(__file__).parent / 'test_audio_track.wav'
     new_audio = AudioSegment.silent(0)
@@ -178,6 +181,17 @@ def test_audio():
     try:
         audio = Audio.Audio(app_config.audio, env)
         audio.run(session)
+    except Exception as e:
+        raise e
+    finally:
+        session.delete()
+
+def test_subtitles():
+    # TODO:TEST
+    app_config, env, session = init()
+    add_transcript(session)
+    try:
+        subtitles.Subtitles()
     except Exception as e:
         raise e
     finally:

@@ -31,6 +31,9 @@ class Video(SQLModel, table=True):
     highlight_color: str
     text_position: str
     background_color: Optional[str] = None
+    word_max: Optional[int] = None
+    subtitle_type: str = "joined"
+    fill_sub_times: bool = True
 
     # style_defaults.highlighting
     highlight_enabled: bool = True

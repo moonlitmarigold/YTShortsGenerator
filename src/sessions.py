@@ -59,6 +59,9 @@ class SessionInfo:
     def prompt_file(self):
         return self.file / 'prompt.md'
 
+    def subtitle_file(self, scene_id):
+        return self.file / f'subtitle_{scene_id}.ass'
+
     def set_status(self, status: Status):
         self.generation_session.status = status.value
 
@@ -152,6 +155,9 @@ class SessionInfo:
             highlight_color=script.style_defaults.highlight_color,
             text_position=script.style_defaults.text_position,
             background_color=script.style_defaults.background_color,
+            word_max=script.style_defaults.word_max,
+            subtitle_type=script.style_defaults.subtitle_type.value,
+            fill_sub_times=script.style_defaults.fill_sub_times,
             highlight_enabled=highlighting.enabled,
             highlight_word_max=highlighting.word_max,
             highlight_as_borders=highlighting.as_borders,

@@ -39,13 +39,21 @@ The background visual is a static looping clip (e.g. gameplay footage). You choo
 **background_genre**:
 - `minecraft_parkour`, `subway_surfers`, `cooking`, `satisfying_asmr`
 
+## Subtitle Chunking (`style_defaults`)
+
+Controls how ordinary (non-highlighted) subtitle text is grouped into on-screen lines. Pick these to match `video_guidance.pacing_recommendation` — e.g. `quick_cuts`/`rapid_fire` pairs naturally with `subtitle_type: "one_word"` or a low `word_max`; `slow_and_steady` pairs with `subtitle_type: "joined"` and a higher `word_max`.
+
+- `word_max` (integer or `null`) — maximum words grouped into one subtitle line when `subtitle_type` is `"joined"`. Leave `null` to use the renderer's default (11).
+- `subtitle_type` (one of `"one_word"`, `"joined"`, `"sentence"`) — `one_word` shows a single word at a time, `joined` groups up to `word_max` words per line, `sentence` splits at sentence boundaries.
+- `fill_sub_times` (boolean) — `true` extends the first subtitle back to the start of the video and the last through to the end, and closes gaps between consecutive lines so captions are never off-screen mid-video.
+
 ## Highlighting Configuration (`style_defaults.highlighting`)
 
 A single, locked-for-the-whole-video set of choices controlling the automatic word highlighter:
 
 - `enabled` (boolean) — whether highlighting is used at all. **Always `true` for this quote generation type.**
 - `word_max` (integer or `null`) — how many words can be highlighted at once; `0` means one word at a time. Leave `null` only when `enabled` is `false`.
-- `as_borders` (boolean) — `true` uses a rounded-border indicator instead of a text-color change for highlighted words.
+- `as_borders` (boolean) — `true` uses a rounded-border as well as a text-color change (if set) for highlighted words.
 - `fade_ms` (`[fade_in, fade_out]` or `null`) — crossfade duration in milliseconds for each highlight transition.
 - `appear` (boolean) — `true` makes words appear cumulatively rather than replacing each other.
 - `font_size` (integer or `null`) — font size in points used specifically for highlighted words (leave `null` to use `style_defaults.font_size`).
@@ -71,10 +79,13 @@ A single, locked-for-the-whole-video set of choices controlling the automatic wo
   "style_defaults": {
     "font_family": "string, must be one of the Available Fonts listed above",
     "font_size": "integer, font size in points, e.g. 48",
-    "primary_text_color": "string, hex code",
-    "highlight_color": "string, hex code",
+    "primary_text_color": "string, hex code like #FFFFFF or #FFF",
+    "highlight_color": "string, hex code like #FFFFFF or #FFF",
     "text_position": "top | center | bottom",
-    "background_color": "string, hex code, or null for no background box",
+    "background_color": "string, hex code like #FFFFFF or #FFF, or null for no background box",
+    "word_max": "integer or null, max words per subtitle line (null = renderer default of 11)",
+    "subtitle_type": "one_word | joined | sentence",
+    "fill_sub_times": "boolean, true to fill gaps and extend first/last subtitle to the video's start/end",
     "highlighting": {
       "enabled": "boolean, must be true for this generation type",
       "word_max": "integer or null",
@@ -125,6 +136,9 @@ A single, locked-for-the-whole-video set of choices controlling the automatic wo
     "highlight_color": "#FFD700",
     "text_position": "center",
     "background_color": null,
+    "word_max": 6,
+    "subtitle_type": "joined",
+    "fill_sub_times": true,
     "highlighting": {
       "enabled": true,
       "word_max": 0,

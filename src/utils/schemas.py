@@ -1,8 +1,11 @@
 # schemas.py
+import re
 from pydantic import BaseModel, field_validator
 from enum import Enum
 from typing import Optional
 from . import fonts
+
+HEX_COLOR_RE = re.compile(r'^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$')
 
 class Platform(str, Enum):
     tiktok = "tiktok"
@@ -18,6 +21,11 @@ class SceneType(str, Enum):
     quote_core = "quote_core"
     body = "body"
     call_to_action = "call_to_action"
+
+class TextPosition(str, Enum):
+    top = 'top'
+    center = 'center'
+    bottom = 'bottom'
 
 class Pacing(str, Enum):
     slow_and_steady = "slow_and_steady"
@@ -38,6 +46,11 @@ class BackgroundGenre(str, Enum):
     subway_surfers = "subway_surfers"
     cooking = "cooking"
     satisfying_asmr = "satisfying_asmr"
+
+class SubtitleType(str, Enum):
+    one_word = "one_word"
+    joined = "joined"
+    sentence = "sentence"
 
 class VideoMetadata(BaseModel):
     suggested_title: str
@@ -67,8 +80,13 @@ class StyleDefaults(BaseModel):
     font_size: int
     primary_text_color: str
     highlight_color: str
-    text_position: str
+    text_position: TextPosition
     background_color: Optional[str] = None
+    # Base subtitle line chunking - distinct from highlighting.word_max (how many
+    # words get highlighted at once). None -> SubTextHighlight's library default of 11.
+    word_max: Optional[int] = None
+    subtitle_type: SubtitleType = SubtitleType.joined
+    fill_sub_times: bool = True
     highlighting: HighlightConfig
 
     @field_validator("font_family", mode="after")
@@ -76,6 +94,13 @@ class StyleDefaults(BaseModel):
     def font_family_must_be_allowed(cls, value):
         if not fonts.font_exists(value) and value not in fonts.list_font_families():
             raise ValueError(f'Font {value} does not exist/ is installed on this machine. A file of all accessible fonts is in {fonts.write_font_file()}')
+        return value
+
+    @field_validator("primary_text_color", "highlight_color", "background_color", mode="after")
+    @classmethod
+    def must_be_hex_color(cls, value):
+        if value is not None and not HEX_COLOR_RE.match(value):
+            raise ValueError(f'{value!r} is not a valid hex color (expected e.g. "#FFFFFF" or "#FFF")')
         return value
 
 
