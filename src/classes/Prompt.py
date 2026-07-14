@@ -20,8 +20,7 @@ class Prompt:
     @staticmethod
     def _parse_output(output:str, fonts:list[str] | None = None):
         clean_output = Prompt.clean_and_parse_json(output)
-        context = {"fonts": fonts} if fonts else None
-        return utils.schemas.GeneratedVideoScript.model_validate(clean_output, context=context)
+        return utils.schemas.GeneratedVideoScript.model_validate(clean_output)
 
     @staticmethod
     def clean_and_parse_json(raw: str) -> dict:

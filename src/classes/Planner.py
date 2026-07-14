@@ -11,7 +11,6 @@ class Planner:
     secrets:utils.Secrets
 
     def run(self, session:sessions.SessionInfo):
-        utils.fonts.ensure_fonts_installed()
 
         generation_obj = generation_types.GENERATION_TYPES[self.generation_type]
         context = {**self.metadata.model_dump(mode='json'), 'fonts': utils.fonts.list_font_families()}

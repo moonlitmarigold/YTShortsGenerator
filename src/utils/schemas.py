@@ -2,6 +2,7 @@
 from pydantic import BaseModel, field_validator
 from enum import Enum
 from typing import Optional
+from . import fonts
 
 class Platform(str, Enum):
     tiktok = "tiktok"
@@ -72,11 +73,11 @@ class StyleDefaults(BaseModel):
 
     @field_validator("font_family", mode="after")
     @classmethod
-    def font_family_must_be_allowed(cls, value, info):
-        allowed = (info.context or {}).get("fonts") if info.context else None
-        if allowed and value not in allowed:
-            raise ValueError(f"font_family '{value}' is not in the allowed fonts list: {allowed}")
+    def font_family_must_be_allowed(cls, value):
+        if not fonts.font_exists(value) and value not in fonts.list_font_families():
+            raise ValueError(f'Font {value} does not exist/ is installed on this machine. A file of all accessible fonts is in {fonts.write_font_file()}')
         return value
+
 
 class Scene(BaseModel):
     id: int

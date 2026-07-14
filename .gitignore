@@ -13,3 +13,4 @@ config.yaml
 CLAUDE.md
 database.db
 src/files
+src/fonts

@@ -9,5 +9,6 @@ pydub
 #pytest-xdist
 moviepy
 ollama
+matplotlib
 
 #SubTextHighlight

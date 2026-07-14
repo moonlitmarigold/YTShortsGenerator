@@ -16,7 +16,7 @@ input_parse = '''
     "platform": "reels"
   },
   "style_defaults": {
-    "font_family": "Inter Semibold",
+    "font_family": "Bebas Neue",
     "font_size": 44,
     "primary_text_color": "#FFFFFF",
     "highlight_color": "#9B59B6",
