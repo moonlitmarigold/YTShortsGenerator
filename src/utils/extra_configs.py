@@ -1,6 +1,7 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from pydantic import BaseModel
 from . import schemas
+from typing import Optional
 
 class Secrets(BaseSettings):
 
@@ -21,3 +22,10 @@ class Metadata(BaseModel):
     video_length_seconds: int
     platform: schemas.Platform
     pov: schemas.POV
+
+class SubtitleBackground(BaseModel):
+    radius: int
+    offset: int
+    transformy: int
+    height_scaling: int
+    rounded_border: bool

@@ -8,6 +8,7 @@ from .generation_types import GENERATION_TYPES
 from . import TTS
 from . import Transcribe
 from .utils import Secrets, AudioConfig, schemas, extra_configs
+from typing import Optional
 
 def find_config_file() -> Path:
     """Search for config.yaml in the current directory and parent directories."""
@@ -41,6 +42,8 @@ class AppConfig(BaseModel):
     tts: TTS.Base.TTSConfig
     transcribe:Transcribe.Base.TranscribeConfig
     audio:AudioConfig
+    background:Optional[extra_configs.SubtitleBackground] = None
+    resolution: tuple[int, int] = (1080, 1920)
 
     @field_validator('generation_type', mode='after')
     @classmethod

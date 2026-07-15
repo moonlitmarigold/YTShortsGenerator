@@ -59,8 +59,8 @@ class SessionInfo:
     def prompt_file(self):
         return self.file / 'prompt.md'
 
-    def subtitle_file(self, scene_id):
-        return self.file / f'subtitle_{scene_id}.ass'
+    def subtitle_file(self):
+        return self.file / f'subtitle_file.ass'
 
     def set_status(self, status: Status):
         self.generation_session.status = status.value

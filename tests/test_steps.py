@@ -102,7 +102,11 @@ def add_audio(session:sessions.SessionInfo):
         shutil.copy(base_audio, audio_path)
 
 def add_transcript(session:sessions.SessionInfo):
-    pass
+    script = session.script
+    base_transcript = Path(__file__).parent / 'transcript.srt'
+    for scene in script.scenes:
+        output_path = session.transcribe_path(scene.id)
+        shutil.copy(base_transcript, output_path)
 
 def full_audio(session:sessions.SessionInfo):
     base_audio = Path(__file__).parent / 'test_audio_track.wav'
@@ -113,6 +117,17 @@ def full_audio(session:sessions.SessionInfo):
         new_audio += AudioSegment.from_file(str(base_audio))
 
     new_audio.export(str(session.full_audio_path()))
+
+def test_subtitles():
+    app_config, env, session = init()
+    add_transcript(session)
+    try:
+        s = subtitles.Subtitles()
+        s.run(session)
+    except Exception as e:
+        raise e
+    finally:
+        session.delete()
 
 def test_background():
     app_config, env, session = init()
@@ -167,12 +182,11 @@ def test_transcribe():
     try:
         tr = Transcribe.Transcribe(app_config.transcribe, env)
         tr.run(session)
-
-        session.delete()
     except Exception as e:
         raise e
     finally:
-        session.delete()
+        pass
+        #session.delete()
 
 
 def test_audio():
@@ -181,17 +195,6 @@ def test_audio():
     try:
         audio = Audio.Audio(app_config.audio, env)
         audio.run(session)
-    except Exception as e:
-        raise e
-    finally:
-        session.delete()
-
-def test_subtitles():
-    # TODO:TEST
-    app_config, env, session = init()
-    add_transcript(session)
-    try:
-        subtitles.Subtitles()
     except Exception as e:
         raise e
     finally:

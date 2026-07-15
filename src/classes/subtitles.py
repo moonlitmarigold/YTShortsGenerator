@@ -2,22 +2,27 @@ from .. import sessions
 from .. import utils
 import SubTextHighlight
 import pysubs2
+import pydub
 from pathlib import Path
+import dataclasses
 
-alignment = {
-    'top': 8,
-    'center': 5,
-    'bottom':2,
-}
 
-formatter = {
-    'one_word' : SubTextHighlight.Formatters.one_word,
-    'joined': SubTextHighlight.Formatters.joined,
-    'sentence': SubTextHighlight.Formatters.sentence,
-}
-
+@dataclasses.dataclass
 class Subtitles:
 
+    background_config:utils.SubtitleBackground = None
+
+    alignment = {
+        'top': 8,
+        'center': 5,
+        'bottom': 2,
+    }
+
+    formatter = {
+        'one_word': SubTextHighlight.Formatters.one_word,
+        'joined': SubTextHighlight.Formatters.joined,
+        'sentence': SubTextHighlight.Formatters.sentence,
+    }
 
 
     def run(self, session:sessions.SessionInfo):
@@ -25,15 +30,35 @@ class Subtitles:
 
         config:SubTextHighlight.SubtitleConfig = self.return_config(script.style_defaults)
 
+        subtitles_files:list[pysubs2.ssafile.SSAFile] = list()
+
         for scene in script.scenes:
-            self.edit_sub_file(
-                scene,
-                session,
-                config
+            subtitles_files.append(
+                self.edit_sub_file(
+                    scene,
+                    session,
+                    config
+                )
             )
 
+        cur_duration:float = 0.0
+        for i, file in enumerate(subtitles_files):
+            file.shift(s=cur_duration)
+
+            # add duration
+            audio = pydub.AudioSegment.from_file(str(session.audio_path(i)))
+            cur_duration += audio.duration_seconds
+
+        # add events to export file
+        output_file = subtitles_files[0]
+        for file in subtitles_files[1:]:
+            events = output_file.events
+            events.extend(file.events)
+            output_file.events = events
+        output_file.to_file(session.subtitle_file(), format_='ass')
+
     @staticmethod
-    def return_config(style_class:utils.schemas.StyleDefaults):
+    def return_config(style_class:utils.schemas.StyleDefaults, background_config:utils.SubtitleBackground=None):
         highlight_class = style_class.highlighting
         conf =  SubTextHighlight.SubtitleConfig(
             '', None,
@@ -43,10 +68,10 @@ class Subtitles:
                 primarycolor=style_class.primary_text_color,
 
             ),
-            subtitle_type=formatter.get(style_class.subtitle_type, SubTextHighlight.Formatters.sentence),
+            subtitle_type= Subtitles.formatter.get(style_class.subtitle_type, SubTextHighlight.Formatters.sentence),
             word_max=style_class.word_max if style_class.word_max else 11,
             fill_sub_times=style_class.fill_sub_times,
-            alignment = alignment.get(style_class.text_position, 5),
+            alignment = Subtitles.alignment.get(style_class.text_position, 5),
             rounded_border=True,
             appear=highlight_class.appear,
             fonts_path=str(Path(__file__).parent.parent / "fonts"),
@@ -54,6 +79,14 @@ class Subtitles:
         )
         if highlight_class.fade_ms:
             conf.fade = (float(highlight_class.fade_ms[0]), float(highlight_class.fade_ms[1]))
+        if background_config:
+            conf.radius = background_config.radius
+            conf.transformy = background_config.transformy
+            conf.offset = background_config.offset
+            conf.height_scaling = background_config.height_scaling
+            conf.rounded_border = background_config.rounded_border
+
+
         if highlight_class.enabled:
             conf.highlight_word_max = highlight_class.word_max
             conf.highlight_as_borders = highlight_class.as_borders
@@ -70,10 +103,9 @@ class Subtitles:
             conf.highlight_style = highlight_style
         return conf
 
-    def edit_sub_file(self, scene:utils.schemas.Scene, session:sessions.SessionInfo, config:SubTextHighlight.SubtitleConfig):
+    @staticmethod
+    def edit_sub_file(scene:utils.schemas.Scene, session:sessions.SessionInfo, config:SubTextHighlight.SubtitleConfig):
         scene_id = scene.id
         input_path = session.transcribe_path(scene_id)
-        output_path = session.subtitle_file(scene_id)
         config.input = str(input_path)
-        config.output = str(output_path)
-        config.render()
+        return config.render()
