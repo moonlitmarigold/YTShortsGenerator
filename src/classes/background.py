@@ -2,14 +2,14 @@ from .. import sessions
 from .. import utils
 from moviepy import *
 from pydub import AudioSegment
+from dataclasses import dataclass
 import logging
 logger = logging.getLogger(__name__)
 
-# Shorts/Reels/TikTok are all 9:16 - matches the hardcoded resize target in classes/YouTube.py
-TARGET_RESOLUTION = (1080, 1920)  # (width, height)
-
+@dataclass
 class Background:
 
+    resolution:tuple[int, int]
 
     def run(self, session:sessions.SessionInfo):
         logger.debug('Starting background video')
@@ -30,7 +30,7 @@ class Background:
             video = next(videos)
             logger.debug(f'Added Video File Clip {str(video)}')
             clip = VideoFileClip(str(video))
-            clip = self._fit_to_resolution(clip, TARGET_RESOLUTION)
+            clip = self._fit_to_resolution(clip, self.resolution)
             clips.append(clip)
             cur_duration += clip.duration
             logger.debug(f'Current clip duration {cur_duration}s')

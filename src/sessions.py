@@ -4,7 +4,6 @@ from typing import Optional
 import logging
 import shutil
 from pathlib import Path
-
 from sqlmodel import Session, select
 from sqlalchemy.orm import selectinload
 
@@ -61,6 +60,15 @@ class SessionInfo:
 
     def subtitle_file(self):
         return self.file / f'subtitle_file.ass'
+
+    @property
+    def tmp(self):
+        p = Path(__file__).parent / 'tmp' / str(self.generation_session.id)
+        p.mkdir(exist_ok=True, parents=True)
+        return p
+
+    def tmp_subfile(self, scene_id):
+        return self.tmp / f'audio_transcribe_{scene_id}.srt'
 
     def set_status(self, status: Status):
         self.generation_session.status = status.value
@@ -236,3 +244,9 @@ class SessionInfo:
         finally:
             if file_dir.exists():
                 shutil.rmtree(file_dir)
+
+    def __del__(self):
+        tmp_folder = self.tmp.parent
+        if tmp_folder.exists():
+            shutil.rmtree(str(tmp_folder))
+

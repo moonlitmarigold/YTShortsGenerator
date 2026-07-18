@@ -122,7 +122,7 @@ def test_subtitles():
     app_config, env, session = init()
     add_transcript(session)
     try:
-        s = subtitles.Subtitles()
+        s = subtitles.Subtitles(app_config.resolution)
         s.run(session)
     except Exception as e:
         raise e
@@ -135,7 +135,7 @@ def test_background():
     print(session.file)
 
     try:
-        b = background.Background()
+        b = background.Background(app_config.resolution)
         b.run(session)
     except Exception as e:
         raise e

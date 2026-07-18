@@ -10,6 +10,7 @@ import dataclasses
 @dataclasses.dataclass
 class Subtitles:
 
+    resolution: tuple[int, int]
     background_config:utils.SubtitleBackground = None
 
     alignment = {
@@ -28,7 +29,10 @@ class Subtitles:
     def run(self, session:sessions.SessionInfo):
         script = session.script
 
-        config:SubTextHighlight.SubtitleConfig = self.return_config(script.style_defaults)
+        config:SubTextHighlight.SubtitleConfig = self.return_config(
+            script.style_defaults,
+            self.background_config
+        )
 
         subtitles_files:list[pysubs2.ssafile.SSAFile] = list()
 
@@ -37,7 +41,8 @@ class Subtitles:
                 self.edit_sub_file(
                     scene,
                     session,
-                    config
+                    config,
+                    self.resolution
                 )
             )
 
@@ -59,6 +64,7 @@ class Subtitles:
 
     @staticmethod
     def return_config(style_class:utils.schemas.StyleDefaults, background_config:utils.SubtitleBackground=None):
+
         highlight_class = style_class.highlighting
         conf =  SubTextHighlight.SubtitleConfig(
             '', None,
@@ -104,8 +110,20 @@ class Subtitles:
         return conf
 
     @staticmethod
-    def edit_sub_file(scene:utils.schemas.Scene, session:sessions.SessionInfo, config:SubTextHighlight.SubtitleConfig):
+    def edit_sub_file(scene:utils.schemas.Scene, session:sessions.SessionInfo, config:SubTextHighlight.SubtitleConfig, resolution:tuple[int, int]):
         scene_id = scene.id
         input_path = session.transcribe_path(scene_id)
-        config.input = str(input_path)
+
+        #TODO: Cleanup the resolution mess
+
+        # Load in the subfile
+        tmp_subfile = pysubs2.SSAFile().from_file(input_path.open())
+        tmp_subfile.info['PlayResX'] = str(resolution[0])
+        tmp_subfile.info['PlayResY'] = str(resolution[1])
+
+        # save to tmp, so that the package can read it
+        tmp_path = session.transcribe_path(scene_id)
+        tmp_subfile.save(tmp_path)
+
+        config.input = str(tmp_path)
         return config.render()
