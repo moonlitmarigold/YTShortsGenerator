@@ -43,7 +43,7 @@ class AppConfig(BaseModel):
     transcribe:Transcribe.Base.TranscribeConfig
     audio:AudioConfig
     background:Optional[extra_configs.SubtitleBackground] = None
-    resolution: tuple[int, int] = (1080, 1920)
+    resolution: Optional[tuple[int, int]] = None
 
     @field_validator('generation_type', mode='after')
     @classmethod
@@ -51,6 +51,12 @@ class AppConfig(BaseModel):
         if value not in GENERATION_TYPES.keys():
             raise ValueError('Generation type {} is not supported'.format(value))
         return value
+
+    @model_validator(mode='after')
+    def resolve_resolution(self):
+        if self.resolution is None:
+            self.resolution = GENERATION_TYPES[self.generation_type].resolution
+        return self
 
 
 

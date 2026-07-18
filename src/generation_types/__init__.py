@@ -7,6 +7,7 @@ class GenerationType:
     name: str
     _prompt_file: str  # points at the .yaml/.md next to it
     hooks:tuple
+    resolution:tuple[int, int]
 
     @property
     def prompt_file(self):
@@ -31,6 +32,7 @@ GENERATION_TYPES = {
         _prompt_file="quote.md",
         hooks=(
             hooks.hook_fonts,
-        )
+        ),
+        resolution=(1080, 1920)
     ),
 }
