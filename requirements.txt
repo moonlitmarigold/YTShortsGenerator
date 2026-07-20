@@ -10,5 +10,5 @@ pydub
 moviepy
 ollama
 matplotlib
-
-#SubTextHighlight
+SubtitleFX
+docker

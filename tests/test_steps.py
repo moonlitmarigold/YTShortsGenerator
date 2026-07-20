@@ -118,16 +118,25 @@ def full_audio(session:sessions.SessionInfo):
 
     new_audio.export(str(session.full_audio_path()))
 
+def background_video(session:sessions.SessionInfo):
+    base_video = Path(__file__).parent / "background_video.mp4"
+
+    shutil.copy(base_video, session.background_video())
+
+
 def test_subtitles():
     app_config, env, session = init()
     add_transcript(session)
+    background_video(session)
+
     try:
         s = subtitles.Subtitles(app_config.resolution)
         s.run(session)
     except Exception as e:
         raise e
     finally:
-        session.delete()
+        pass
+        #session.delete()
 
 def test_background():
     app_config, env, session = init()
@@ -159,8 +168,7 @@ def test_prompt():
     except Exception as e:
         raise e
     finally:
-        pass
-        #session.delete()
+        session.delete()
 
 def test_tts():
     app_config, env, session = init()

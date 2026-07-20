@@ -1,11 +1,13 @@
 from .. import sessions
 from .. import utils
-import SubTextHighlight
+from SubtitleFX import Formatters, Config, Style, DockerConfig, BorderConfig, SubtitleBuild
 import pysubs2
 import pydub
+from pydub import Video
 from pathlib import Path
 import dataclasses
 
+# TODO: ADD duration to the COnfig
 
 @dataclasses.dataclass
 class Subtitles:
@@ -20,17 +22,19 @@ class Subtitles:
     }
 
     formatter = {
-        'one_word': SubTextHighlight.Formatters.one_word,
-        'joined': SubTextHighlight.Formatters.joined,
-        'sentence': SubTextHighlight.Formatters.sentence,
+        'one_word': Formatters.one_word,
+        'joined': Formatters.joined,
+        'sentence': Formatters.sentence,
     }
 
 
     def run(self, session:sessions.SessionInfo):
         script = session.script
 
-        config:SubTextHighlight.SubtitleConfig = self.return_config(
+        config:Config = self.return_config(
             script.style_defaults,
+            self.resolution,
+            session.background_video(),
             self.background_config
         )
 
@@ -42,17 +46,11 @@ class Subtitles:
                     scene,
                     session,
                     config,
-                    self.resolution
                 )
             )
 
-        cur_duration:float = 0.0
-        for i, file in enumerate(subtitles_files):
-            file.shift(s=cur_duration)
-
-            # add duration
-            audio = pydub.AudioSegment.from_file(str(session.audio_path(i)))
-            cur_duration += audio.duration_seconds
+        # TODO: Set duration in script beforehand
+        cur_duration:float = pydub.
 
         # add events to export file
         output_file = subtitles_files[0]
@@ -63,67 +61,89 @@ class Subtitles:
         output_file.to_file(session.subtitle_file(), format_='ass')
 
     @staticmethod
-    def return_config(style_class:utils.schemas.StyleDefaults, background_config:utils.SubtitleBackground=None):
-
+    def return_config(style_class:utils.schemas.StyleDefaults, resolution:tuple[int, int], video:Path, background_config:utils.SubtitleBackground=None,):
         highlight_class = style_class.highlighting
-        conf =  SubTextHighlight.SubtitleConfig(
-            '', None,
-            subtitle_style=SubTextHighlight.StyleConfig(
-                fontname=style_class.font_family,
-                fontsize=style_class.font_size,
-                primarycolor=style_class.primary_text_color,
 
-            ),
-            subtitle_type= Subtitles.formatter.get(style_class.subtitle_type, SubTextHighlight.Formatters.sentence),
-            word_max=style_class.word_max if style_class.word_max else 11,
-            fill_sub_times=style_class.fill_sub_times,
-            alignment = Subtitles.alignment.get(style_class.text_position, 5),
-            rounded_border=True,
-            appear=highlight_class.appear,
+
+        docker_conf = DockerConfig(
             fonts_path=str(Path(__file__).parent.parent / "fonts"),
-            docker_force_install=True,
+            force_install=True,
         )
-        if highlight_class.fade_ms:
-            conf.fade = (float(highlight_class.fade_ms[0]), float(highlight_class.fade_ms[1]))
-        if background_config:
-            conf.radius = background_config.radius
-            conf.transformy = background_config.transformy
-            conf.offset = background_config.offset
-            conf.height_scaling = background_config.height_scaling
-            conf.rounded_border = background_config.rounded_border
 
+        if highlight_class.fade_ms:
+            fade = (float(highlight_class.fade_ms[0]), float(highlight_class.fade_ms[1]))
+        else:
+            fade = (0, 0)
+
+        if background_config:
+            rounded_border = background_config.rounded_border
+            bg_conf = BorderConfig(
+                radius=background_config.radius,
+                transformy=background_config.transformy,
+                offset=background_config.offset,
+                height_scaling=background_config.height_scaling,
+            )
+
+        else:
+            rounded_border = True
+            bg_conf = BorderConfig()
 
         if highlight_class.enabled:
-            conf.highlight_word_max = highlight_class.word_max
-            conf.highlight_as_borders = highlight_class.as_borders
+            highlight_char_max = highlight_class.word_max
+            highlight_as_borders = highlight_class.as_borders
             if highlight_class.font_size:
-                highlight_style = SubTextHighlight.StyleConfig(
+                highlight_style = Style(
                     primarycolor=style_class.highlight_color,
                     fontsize=highlight_class.font_size
                 )
             else:
-                highlight_style = SubTextHighlight.StyleConfig(
+                highlight_style = Style(
                     primarycolor=style_class.highlight_color,
                 )
+        else:
+            highlight_style = None
+            highlight_char_max = None
+            highlight_as_borders = False
 
-            conf.highlight_style = highlight_style
+        print(str(video))
+        conf =  Config(
+            input='', output=None,
+            input_video=str(video),
+            subtitle_style=Style(
+                fontname=style_class.font_family,
+                fontsize=style_class.font_size,
+                primarycolor=style_class.primary_text_color,
+            ),
+            highlight_style=highlight_style,
+            subtitle_type= Subtitles.formatter.get(style_class.subtitle_type, Formatters.sentence),
+            char_max=style_class.word_max if style_class.word_max else 11,
+            resolution=resolution,
+            fill_sub_times=style_class.fill_sub_times,
+            alignment = Subtitles.alignment.get(style_class.text_position, 5),
+            rounded_border =  rounded_border,
+            border_config=bg_conf,
+            appear=highlight_class.appear,
+            fade= fade,
+            docker_config=docker_conf,
+            highlight_char_max=highlight_char_max,
+            highlight_as_borders=highlight_as_borders,
+        )
+
         return conf
 
+
     @staticmethod
-    def edit_sub_file(scene:utils.schemas.Scene, session:sessions.SessionInfo, config:SubTextHighlight.SubtitleConfig, resolution:tuple[int, int]):
+    def edit_sub_file(scene:utils.schemas.Scene, session:sessions.SessionInfo, config:Config):
         scene_id = scene.id
         input_path = session.transcribe_path(scene_id)
 
-        #TODO: Cleanup the resolution mess
-
         # Load in the subfile
         tmp_subfile = pysubs2.SSAFile().from_file(input_path.open())
-        tmp_subfile.info['PlayResX'] = str(resolution[0])
-        tmp_subfile.info['PlayResY'] = str(resolution[1])
 
-        # save to tmp, so that the package can read it
-        tmp_path = session.transcribe_path(scene_id)
-        tmp_subfile.save(tmp_path)
+        config.input = tmp_subfile
 
-        config.input = str(tmp_path)
-        return config.render()
+        with SubtitleBuild(config) as Build:
+            Build.run()
+            sub_file = Build.save()
+
+        return sub_file
