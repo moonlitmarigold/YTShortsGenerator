@@ -1,6 +1,6 @@
 from pathlib import Path
 from src import config, sessions
-from src.classes import Prompt, Tts, Transcribe, Audio, background, Planner, subtitles
+from src.classes import Prompt, Tts, Transcribe, Audio, background, Planner, subtitles, video
 import shutil
 from pydub import AudioSegment
 
@@ -123,6 +123,29 @@ def background_video(session:sessions.SessionInfo):
 
     shutil.copy(base_video, session.background_video())
 
+def add_full_subtitle_file(session:sessions.SessionInfo):
+    base_subtitle = Path(__file__).parent / 'subtitle_file.ass'
+
+    shutil.copy(base_subtitle, session.subtitle_file())
+
+def test_video():
+    app_config, env, session = init()
+
+    add_full_subtitle_file(session)
+    add_audio(session)
+    background_video(session)
+
+    try:
+        audio = Audio.Audio(app_config.audio, env)
+        audio.run(session)
+
+        v = video.Video()
+        v.run(session)
+    except Exception as e:
+        raise e
+    finally:
+        pass
+        #session.delete()
 
 def test_subtitles():
     app_config, env, session = init()
@@ -135,8 +158,7 @@ def test_subtitles():
     except Exception as e:
         raise e
     finally:
-        pass
-        #session.delete()
+        session.delete()
 
 def test_background():
     app_config, env, session = init()

@@ -40,8 +40,10 @@ class SessionInfo:
         p.mkdir(exist_ok=True, parents=True)
         return p
 
-    def _path(self, name:str):
-        p = self.file / name
+    def _path(self, name:str, _base=None):
+        if not _base:
+            _base = self.file
+        p = _base / name
         p.touch(exist_ok=True)
         return p
 
@@ -66,6 +68,9 @@ class SessionInfo:
     def subtitle_file(self):
         return self._path(f'subtitle_file.ass')
 
+    def output_video(self):
+        return self._path('output_video.mp4')
+
     @property
     def tmp(self):
         p = Path(__file__).parent / 'tmp' / str(self.generation_session.id)
@@ -73,7 +78,11 @@ class SessionInfo:
         return p
 
     def tmp_subfile(self, scene_id):
-        return self.tmp / f'audio_transcribe_{scene_id}.srt'
+        #return self.tmp / f'audio_transcribe_{scene_id}.srt'
+        return self._path(f'audio_transcribe_{scene_id}.srt', _base=self.tmp)
+
+    def tmp_output_video(self):
+        return self._path('output_video.mp4', _base=self.tmp)
 
     def set_duration(self, duration_seconds:float):
         duration.set_duration(self.script, duration_seconds)
@@ -82,11 +91,12 @@ class SessionInfo:
     def duration_seconds(self):
         return self.script.video_metadata.total_duration_seconds
 
-    @property
-    def fonts_path(self):
+    @staticmethod
+    def fonts_path():
         p =  Path(__file__).parent / "fonts"
         p.mkdir(exist_ok=True)
         return p
+
 
     def set_status(self, status: Status):
         self.generation_session.status = status.value

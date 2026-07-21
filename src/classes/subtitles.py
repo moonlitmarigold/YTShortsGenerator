@@ -31,7 +31,7 @@ class Subtitles:
             script.style_defaults,
             self.resolution,
             session.background_video(),
-            session.fonts_path,
+            session.fonts_path(),
             self.background_config
         )
 
