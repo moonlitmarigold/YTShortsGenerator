@@ -82,6 +82,12 @@ class SessionInfo:
     def duration_seconds(self):
         return self.script.video_metadata.total_duration_seconds
 
+    @property
+    def fonts_path(self):
+        p =  Path(__file__).parent / "fonts"
+        p.mkdir(exist_ok=True)
+        return p
+
     def set_status(self, status: Status):
         self.generation_session.status = status.value
 

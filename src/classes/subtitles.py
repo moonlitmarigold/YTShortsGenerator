@@ -31,6 +31,7 @@ class Subtitles:
             script.style_defaults,
             self.resolution,
             session.background_video(),
+            session.fonts_path,
             self.background_config
         )
 
@@ -54,12 +55,11 @@ class Subtitles:
         output_file.save(session.subtitle_file(), format_='ass')
 
     @staticmethod
-    def return_config(style_class:utils.schemas.StyleDefaults, resolution:tuple[int, int], video:Path, background_config:utils.SubtitleBackground=None,):
+    def return_config(style_class:utils.schemas.StyleDefaults, resolution:tuple[int, int], video:Path, fonts_path:Path, background_config:utils.SubtitleBackground=None,):
         highlight_class = style_class.highlighting
 
-
         docker_conf = DockerConfig(
-            fonts_path=str(Path(__file__).parent.parent / "fonts"),
+            fonts_path=[str(font) for font in fonts_path.iterdir() if font.suffix == '.tff'],
             force_install=True,
         )
 
