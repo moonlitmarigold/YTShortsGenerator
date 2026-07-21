@@ -2,12 +2,8 @@ from .. import sessions
 from .. import utils
 from SubtitleFX import Formatters, Config, Style, DockerConfig, BorderConfig, SubtitleBuild
 import pysubs2
-import pydub
-from pydub import Video
 from pathlib import Path
 import dataclasses
-
-# TODO: ADD duration to the COnfig
 
 @dataclasses.dataclass
 class Subtitles:
@@ -49,16 +45,13 @@ class Subtitles:
                 )
             )
 
-        # TODO: Set duration in script beforehand
-        cur_duration:float = pydub.
-
         # add events to export file
         output_file = subtitles_files[0]
         for file in subtitles_files[1:]:
             events = output_file.events
             events.extend(file.events)
             output_file.events = events
-        output_file.to_file(session.subtitle_file(), format_='ass')
+        output_file.save(session.subtitle_file(), format_='ass')
 
     @staticmethod
     def return_config(style_class:utils.schemas.StyleDefaults, resolution:tuple[int, int], video:Path, background_config:utils.SubtitleBackground=None,):

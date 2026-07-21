@@ -57,7 +57,7 @@ class VideoMetadata(BaseModel):
     key_theme: str
     video_description: Optional[str] = None
     tags: list[str] = []
-    total_duration_seconds: Optional[int] = None
+    total_duration_seconds: Optional[float] = None
     platform: Platform
 
 class HighlightConfig(BaseModel):

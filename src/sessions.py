@@ -8,7 +8,7 @@ from sqlmodel import Session, select
 from sqlalchemy.orm import selectinload
 
 from . import config, sql
-from utils import schemas
+from utils import schemas, duration
 
 logger = logging.getLogger(__name__)
 
@@ -40,26 +40,31 @@ class SessionInfo:
         p.mkdir(exist_ok=True, parents=True)
         return p
 
+    def _path(self, name:str):
+        p = self.file / name
+        p.touch(exist_ok=True)
+        return p
+
     def audio_path(self, scene_id):
-        return self.file / f'audio_track_{scene_id}.wav'
+        return self._path(f'audio_track_{scene_id}.wav')
 
     def transcribe_path(self, scene_id):
-        return self.file / f'audio_transcribe_{scene_id}.srt'
+        return self._path(f'audio_transcribe_{scene_id}.srt')
 
     def full_audio_path(self):
-        return self.file / 'audio.wav'
+        return self._path('audio.wav')
 
     def music_path(self):
-        return self.file / 'music.mp3'
+        return self._path('music.mp3')
 
     def background_video(self):
-        return self.file / 'background_video.mp4'
+        return self._path('background_video.mp4')
 
     def prompt_file(self):
-        return self.file / 'prompt.md'
+        return self._path('prompt.md')
 
     def subtitle_file(self):
-        return self.file / f'subtitle_file.ass'
+        return self._path(f'subtitle_file.ass')
 
     @property
     def tmp(self):
@@ -69,6 +74,13 @@ class SessionInfo:
 
     def tmp_subfile(self, scene_id):
         return self.tmp / f'audio_transcribe_{scene_id}.srt'
+
+    def set_duration(self, duration_seconds:float):
+        duration.set_duration(self.script, duration_seconds)
+
+    @property
+    def duration_seconds(self):
+        return self.script.video_metadata.total_duration_seconds
 
     def set_status(self, status: Status):
         self.generation_session.status = status.value

@@ -21,8 +21,7 @@ class Background:
         videos = downloaded_files.get_genre(genre)
 
         # audio duration
-        audio = AudioSegment.from_file(str(session.full_audio_path()))
-        audio_duration = audio.duration_seconds
+        audio_duration = session.duration_seconds
 
         clips: list[VideoClip] = list()
         cur_duration = 0

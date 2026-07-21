@@ -12,7 +12,7 @@ input_parse = '''
     "key_theme": "Burnout is not a personal failure; it is a systemic signal that your energy resources must be managed as carefully as any production deployment.",
     "video_description": "Why peak performance isn't about logging more hours. Send this to a teammate who needs to hear it.",
     "tags": ["burnout", "softwareengineering", "productivity", "mentalhealth"],
-    "total_duration_seconds": 40,
+    "total_duration_seconds": 39.25,
     "platform": "reels"
   },
   "style_defaults": {
@@ -193,8 +193,7 @@ def test_transcribe():
     except Exception as e:
         raise e
     finally:
-        pass
-        #session.delete()
+        session.delete()
 
 
 def test_audio():

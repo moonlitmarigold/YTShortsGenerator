@@ -101,6 +101,8 @@ class Audio:
                 combined += AudioSegment.silent(self.config.silence)
         output_path = session.full_audio_path()
 
+        session.set_duration(combined.duration_seconds)
+
         combined.export(str(output_path))
 
         # music
