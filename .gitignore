@@ -12,5 +12,11 @@ config.yaml
 .idea
 CLAUDE.md
 database.db
+database.db-shm
+database.db-wal
 src/files
 src/fonts
+
+tests/background_video.mp4
+tests/transcript.srt
+tests/test_audio_track.wav
