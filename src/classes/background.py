@@ -3,6 +3,7 @@ from .. import utils
 from moviepy import *
 from pydub import AudioSegment
 from dataclasses import dataclass
+import random
 import logging
 logger = logging.getLogger(__name__)
 
@@ -10,6 +11,12 @@ logger = logging.getLogger(__name__)
 class Background:
 
     resolution:tuple[int, int]
+    speed:float = 1.1
+
+    def _speed_up(self, clip: VideoClip) -> VideoClip:
+        if self.speed == 1.0:
+            return clip
+        return clip.with_effects([vfx.MultiplySpeed(self.speed)])
 
     def run(self, session:sessions.SessionInfo):
         logger.debug('Starting background video')
@@ -22,6 +29,8 @@ class Background:
 
         # audio duration
         audio_duration = session.duration_seconds
+        # raw footage needed before speeding up, so the final clip still matches audio_duration
+        raw_duration = audio_duration * self.speed
 
         clips: list[VideoClip] = list()
         cur_duration = 0
@@ -33,10 +42,19 @@ class Background:
             clips.append(clip)
             cur_duration += clip.duration
             logger.debug(f'Current clip duration {cur_duration}s')
-            if cur_duration > audio_duration:
+            if cur_duration > raw_duration:
                 break
 
-        output_clip = concatenate_videoclips(clips).subclipped(0, audio_duration)
+        # extra: For long videos
+        if len(clips):
+            output_clip = concatenate_videoclips(clips)
+            rand_int = random.randint(0, output_clip.duration-raw_duration)
+            output_clip = output_clip.subclipped(rand_int, rand_int+raw_duration)
+        else:
+            output_clip = concatenate_videoclips(clips).subclipped(0, raw_duration)
+
+        output_clip = self._speed_up(output_clip)
+
         output_clip.write_videofile(str(session.background_video()))
 
     @staticmethod
