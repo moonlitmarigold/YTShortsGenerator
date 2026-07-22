@@ -3,33 +3,39 @@ from moviepy import VideoFileClip, AudioFileClip, CompositeVideoClip, CompositeA
 from .. import sessions
 from .. import utils
 import ffmpeg
+from moviepy.audio.fx import MultiplyVolume
+
 
 class Video:
 
     def run(self, session:sessions.SessionInfo):
+        duration = session.script.video_metadata.total_duration_seconds
+
         # load in the needed clips
         video = VideoFileClip(session.background_video())
         audio = AudioFileClip(session.full_audio_path())
         music = AudioFileClip(session.music_path())
 
         # TODO: Adjust volume of music to be relative to the audio volume
+        music = music.with_effects([MultiplyVolume(0.4)])
 
-        # TODO: Speed up the Audio and remove gaps
+        # TODO: Speed up the video slightly
 
-        (
-        CompositeVideoClip(
+
+        (CompositeVideoClip(
             (
-                video,
+                video.subclipped(0, duration),
             )
-        ).with_audio(
+        )
+        .with_audio(
             CompositeAudioClip(
                 (
-                    audio,
-                    music
+                    audio.subclipped(0, duration),
+                    music.subclipped(0, duration)
                 )
             )
         )
-        .write_videofile(str(session.tmp_output_video()))
+        .write_videofile(str(session.output_video_tmp()), codec="libx264", audio_codec="aac")
         )
 
         self._subtitles(session)
@@ -37,12 +43,15 @@ class Video:
     @staticmethod
     def _subtitles(session:sessions.SessionInfo):
         # burn the subtitles generated previously
-        stream = ffmpeg.input(str(session.tmp_output_video()))
-        stream = stream.filter(
+        in_stream = ffmpeg.input(str(session.output_video_tmp()))
+
+        video = in_stream.video.filter(
             'ass',
             filename=str(session.subtitle_file()),
             fontsdir=str(session.fonts_path()),
         )
-        stream = ffmpeg.output(stream, str(session.output_video()), acodec='copy')
-        ffmpeg.run(stream, overwrite_output=True)
+        audio = in_stream.audio
+
+        out = ffmpeg.output(video, audio, str('./test.mp4'), acodec='copy')
+        ffmpeg.run(out, overwrite_output=True)
 
