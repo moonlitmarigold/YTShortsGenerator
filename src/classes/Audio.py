@@ -2,6 +2,8 @@
 # build music
 from .. import sessions
 from pydub import AudioSegment
+from pydub.effects import speedup
+from pydub.silence import detect_leading_silence
 from .. import utils
 from pydantic_settings import BaseSettings
 import dataclasses
@@ -29,7 +31,7 @@ class Audio:
         music_type = self.config.music_type
         self.music_types[music_type](session, audio_track)
 
-    def downloaded(self, session:sessions.SessionInfo, audio_track:AudioSegment):
+    def downloaded(self, session:sessions.SessionInfo, duration_seconds:float):
         logger.debug('Using Downloaded files for music')
         video_guidance = session.script.video_guidance
         downloaded_files = utils.Downloaded('music')
@@ -37,12 +39,12 @@ class Audio:
         combined = AudioSegment.silent(0)
         while True:
             combined += AudioSegment.from_file(str(files.__next__()))
-            if combined.duration_seconds > audio_track.duration_seconds:
+            if combined.duration_seconds > duration_seconds:
                 break
         logger.debug(f'Created song background')
         output_path = session.music_path()
 
-        res_audio = combined[:audio_track.duration_seconds*1000]
+        res_audio = combined[:duration_seconds*1000]
         res_audio.export(str(output_path))
 
     def jamendo(self, session:sessions.SessionInfo, audio_track:AudioSegment):
@@ -86,6 +88,17 @@ class Audio:
             for chunk in r.iter_content(chunk_size=8192):
                 f.write(chunk)
 
+    def _strip_silence(self, segment: AudioSegment) -> AudioSegment:
+        thresh = self.config.silence_thresh
+        start_trim = detect_leading_silence(segment, silence_threshold=thresh)
+        end_trim = detect_leading_silence(segment.reverse(), silence_threshold=thresh)
+        return segment[start_trim:len(segment) - end_trim]
+
+    def _speed_up(self, segment: AudioSegment) -> AudioSegment:
+        if self.config.speed == 1.0:
+            return segment
+        return speedup(segment, playback_speed=self.config.speed)
+
     def run(self, session:sessions.SessionInfo):
         # audio_file
         scenes = session.script.scenes
@@ -93,10 +106,10 @@ class Audio:
         combined = AudioSegment.silent(0)
         for scene in scenes:
             path = session.audio_path(scene.id)
-            if combined is None:
-                combined = AudioSegment.from_file(str(path))
-            else:
-                combined += AudioSegment.from_file(str(path))
+            seg = AudioSegment.from_file(str(path))
+            seg = self._strip_silence(seg)
+            seg = self._speed_up(seg)
+            combined += seg
             if scene.id != last_session_id and self.config.silence != 0:
                 combined += AudioSegment.silent(self.config.silence)
         output_path = session.full_audio_path()

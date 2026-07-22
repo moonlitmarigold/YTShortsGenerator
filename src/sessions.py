@@ -68,6 +68,9 @@ class SessionInfo:
     def subtitle_file(self):
         return self._path(f'subtitle_file.ass')
 
+    def output_video_tmp(self):
+        return self._path('output_video_tmp.mp4')
+
     def output_video(self):
         return self._path('output_video.mp4')
 

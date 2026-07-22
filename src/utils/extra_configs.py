@@ -14,6 +14,8 @@ class AudioConfig(BaseModel):
 
     silence:int
     music_type:str
+    speed:float
+    silence_thresh:float
 
 class Metadata(BaseModel):
     topic: str
