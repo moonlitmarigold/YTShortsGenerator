@@ -16,10 +16,7 @@ class Video:
         audio = AudioFileClip(session.full_audio_path())
         music = AudioFileClip(session.music_path())
 
-        # TODO: Adjust volume of music to be relative to the audio volume
         music = music.with_effects([MultiplyVolume(0.4)])
-
-        # TODO: Speed up the video slightly
 
 
         (CompositeVideoClip(

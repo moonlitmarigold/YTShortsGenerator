@@ -43,6 +43,7 @@ class AppConfig(BaseModel):
     transcribe:Transcribe.Base.TranscribeConfig
     audio:AudioConfig
     background:Optional[extra_configs.SubtitleBackground] = None
+    background_speed: float = Field(default=1.1, ge=1.0, le=1.1)
     resolution: Optional[tuple[int, int]] = None
 
     @field_validator('generation_type', mode='after')

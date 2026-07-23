@@ -113,7 +113,7 @@ class PipelineBuilder:
         self.add_steps(Planner=p)
 
     def _background(self):
-        b = background.Background(self.app_config.resolution)
+        b = background.Background(self.app_config.resolution, self.app_config.background_speed)
         self.add_steps(Background=b)
 
     def _subtitles(self):
