@@ -74,6 +74,9 @@ class SessionInfo:
     def output_video(self):
         return self._path('output_video.mp4')
 
+    def thumbnail_path(self):
+        return self._path('thumbnail.jpg')
+
     @property
     def tmp(self):
         p = Path(__file__).parent / 'tmp' / str(self.generation_session.id)

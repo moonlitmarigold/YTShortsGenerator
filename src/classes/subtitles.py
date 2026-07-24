@@ -98,7 +98,6 @@ class Subtitles:
             highlight_char_max = None
             highlight_as_borders = False
 
-        print(str(video))
         conf =  Config(
             input='', output=None,
             input_video=str(video),

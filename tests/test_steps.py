@@ -1,6 +1,6 @@
 from pathlib import Path
 from src import config, sessions
-from src.classes import Prompt, Tts, Transcribe, Audio, background, Planner, subtitles, video
+from src.classes import Prompt, Tts, Transcribe, Audio, background, Planner, subtitles, video, thumbnail
 import shutil
 from pydub import AudioSegment
 
@@ -172,6 +172,20 @@ def test_background():
         raise e
     finally:
         session.delete()
+
+def test_thumbnail():
+    app_config, env, session = init()
+    background_video(session)
+
+    try:
+        t = thumbnail.Thumbnail(app_config.resolution)
+        t.run(session)
+        assert session.thumbnail_path().stat().st_size > 0
+    except Exception as e:
+        raise e
+    finally:
+        session.delete()
+
 
 def test_prompt():
     app_config, env = config.open_config_env()

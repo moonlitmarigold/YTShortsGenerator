@@ -8,6 +8,7 @@ stable-ts
 pydub
 #pytest-xdist
 moviepy
+pillow
 ollama
 matplotlib
 SubtitleFX

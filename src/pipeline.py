@@ -1,6 +1,6 @@
 import pydantic
 from . import config, sessions
-from .classes import Prompt, Tts, Transcribe, Audio, Planner, background, video, subtitles
+from .classes import Prompt, Tts, Transcribe, Audio, Planner, background, video, subtitles, thumbnail
 from pathlib import Path
 
 import logging
@@ -63,6 +63,7 @@ class PipelineBuilder:
             self._transcribe,
             self._audio,
             self._background,
+            self._thumbnail,
             self._subtitles,
             self._video,
         )
@@ -115,6 +116,10 @@ class PipelineBuilder:
     def _background(self):
         b = background.Background(self.app_config.resolution, self.app_config.background_speed)
         self.add_steps(Background=b)
+
+    def _thumbnail(self):
+        t = thumbnail.Thumbnail(self.app_config.resolution)
+        self.add_steps(Thumbnail=t)
 
     def _subtitles(self):
         s = subtitles.Subtitles(self.app_config.resolution)
