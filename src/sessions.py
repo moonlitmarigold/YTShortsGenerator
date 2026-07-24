@@ -103,7 +103,6 @@ class SessionInfo:
         p.mkdir(exist_ok=True)
         return p
 
-
     def set_status(self, status: Status):
         self.generation_session.status = status.value
 
@@ -113,6 +112,13 @@ class SessionInfo:
     def set_error(self, error: str):
         self.generation_session.error_message = error
         self.set_status(Status.FAILED)
+
+    def add_description(self, des:str):
+        if self.script.video_metadata.video_description:
+            self.script.video_metadata.video_description += '\n'
+            self.script.video_metadata.video_description += des
+        else:
+            self.script.video_metadata.video_description = des
 
     @staticmethod
     def all_sessions_id():
@@ -284,3 +290,14 @@ class SessionInfo:
         if tmp_folder.exists():
             shutil.rmtree(str(tmp_folder))
 
+    @staticmethod
+    def delete_stray_files():
+        ids = SessionInfo.all_sessions_id()
+
+        # clear up stray dirs
+        for id in ids:
+            try:
+                obj = SessionInfo.from_sql(id)
+                obj.delete()
+            except Exception:
+                logger.exception("Failed to clear session %s, continuing with the rest", id)

@@ -36,6 +36,9 @@ class Downloaded:
     def json_path(self):
         return self.path / '.json'
 
+    def get_entry(self, file:Path):
+        return self.json_info[file.name]
+
     def file_by_genre(self):
         result = dict()
         for entry in self.json_info:

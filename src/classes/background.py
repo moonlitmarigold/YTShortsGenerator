@@ -32,11 +32,18 @@ class Background:
         # raw footage needed before speeding up, so the final clip still matches audio_duration
         raw_duration = audio_duration * self.speed
 
+        video_description = list()
+
         clips: list[VideoClip] = list()
         cur_duration = 0
         while True:
             video = next(videos)
             logger.debug(f'Added Video File Clip {str(video)}')
+
+            mention = downloaded_files.get_entry(video)['mentions']
+            if mention not in video_description:
+                video_description.append(mention)
+
             clip = VideoFileClip(str(video))
             clip = self._fit_to_resolution(clip, self.resolution)
             clips.append(clip)
@@ -44,6 +51,10 @@ class Background:
             logger.debug(f'Current clip duration {cur_duration}s')
             if cur_duration > raw_duration:
                 break
+
+        # build the video des
+        if video_description:
+            session.add_description(f'Background footage: {' '.join(video_description)}')
 
         # extra: For long videos
         if len(clips):
