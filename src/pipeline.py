@@ -1,6 +1,6 @@
 import pydantic
 from . import config, sessions
-from .classes import Prompt, Tts, Transcribe, Audio, Planner, background, video, subtitles, thumbnail
+from .classes import Prompt, Tts, Transcribe, Audio, Planner, background, video, subtitles, thumbnail, Upload
 from pathlib import Path
 
 import logging
@@ -128,6 +128,16 @@ class PipelineBuilder:
     def _video(self):
         v = video.Video()
         self.add_steps(Video=v)
+
+    # Built but deliberately not in build_list() yet: this step publishes the
+    # video to a real external platform, so it should only run once the user
+    # opts in (config has `uploader:` set) rather than firing on every pipeline
+    # run. Add `self._upload` to build_list() to make it live.
+    def _upload(self):
+        if self.app_config.uploader is None:
+            return
+        u = Upload.Upload(self.app_config.uploader, self.env_config)
+        self.add_steps(Upload=u)
 
 
     def __enter__(self):

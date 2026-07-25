@@ -16,6 +16,8 @@ database.db-shm
 database.db-wal
 src/files
 src/fonts
+youtube_token.json
+client_secret*.json
 
 tests/background_video.mp4
 tests/transcript.srt

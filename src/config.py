@@ -7,6 +7,7 @@ from .providers import Base
 from .generation_types import GENERATION_TYPES
 from . import TTS
 from . import Transcribe
+from . import Uploaders
 from .utils import Secrets, AudioConfig, schemas, extra_configs
 from typing import Optional
 
@@ -42,6 +43,7 @@ class AppConfig(BaseModel):
     tts: TTS.Base.TTSConfig
     transcribe:Transcribe.Base.TranscribeConfig
     audio:AudioConfig
+    uploader:Optional[Uploaders.Base.UploaderConfig] = None
     background:Optional[extra_configs.SubtitleBackground] = None
     background_speed: float = Field(default=1.1, ge=1.0, le=1.1)
     resolution: Optional[tuple[int, int]] = None
