@@ -1,7 +1,7 @@
 from .. import sessions
 from .. import utils
 from moviepy import *
-from pydub import AudioSegment
+import math
 from dataclasses import dataclass
 import random
 import logging
@@ -40,8 +40,8 @@ class Background:
             video = next(videos)
             logger.debug(f'Added Video File Clip {str(video)}')
 
-            mention = downloaded_files.get_entry(video)['mentions']
-            if mention not in video_description:
+            mention = downloaded_files.get_entry(video).get('mentions', None)
+            if video_description and mention not in video_description:
                 video_description.append(mention)
 
             clip = VideoFileClip(str(video))
@@ -57,10 +57,10 @@ class Background:
             session.add_description(f'Background footage: {' '.join(video_description)}')
 
         # extra: For long videos
-        if len(clips):
+        if len(clips) == 1:
             output_clip = concatenate_videoclips(clips)
-            rand_int = random.randint(0, output_clip.duration-raw_duration)
-            output_clip = output_clip.subclipped(rand_int, rand_int+raw_duration)
+            rand_int = random.randint(0, math.floor(output_clip.duration-raw_duration))
+            output_clip = output_clip.subclipped(rand_int, math.floor(rand_int+raw_duration))
         else:
             output_clip = concatenate_videoclips(clips).subclipped(0, raw_duration)
 
