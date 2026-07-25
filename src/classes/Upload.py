@@ -16,13 +16,15 @@ class Upload:
     def __post_init__(self):
         self.uploader = Uploaders.UPLOADER_REGISTER[self.config.name](self.config, self.secrets)
 
-    def description(self):
-        pass
+    def description(self, session:sessions.SessionInfo):
+        _str = [self.config.description_message, '', session.script.video_metadata.video_description]
+        return '\n'.join(_str)
+
 
     def run(self, session:sessions.SessionInfo):
         video_metadata = session.script.video_metadata
         video_path = session.output_video()
-        description = self.description()
+        description = self.description(session)
         logger.debug(f'Uploading video for session {session.id} via {self.config.name}')
         video_id = self.uploader.upload(
             video_path=video_path,

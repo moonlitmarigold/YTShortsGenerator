@@ -1,6 +1,7 @@
 import dataclasses
 from pathlib import Path
 from pydantic import BaseModel, field_validator
+from typing import Optional
 
 UPLOADER_REGISTER = dict()
 
@@ -12,6 +13,8 @@ class UploaderConfig(BaseModel):
     name: str
     privacy_status: str = "private"
     made_for_kids: bool = False
+    youtube_category_id:Optional[int] = None
+    description_message:str = "Don't forget to like, comment, and subscribe for more!"
 
     @field_validator('name', mode='after')
     @classmethod

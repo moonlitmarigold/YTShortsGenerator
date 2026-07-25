@@ -12,17 +12,16 @@ from .Base import BaseUploader, register
 
 logger = logging.getLogger(__name__)
 
-SCOPES = ["https://www.googleapis.com/auth/youtube.upload"]
-
 # Shorts aren't a separate category in the Data API taxonomy - they're just
 # <=60s vertical videos uploaded through the normal videos.insert endpoint.
 # 22 = "People & Blogs", a reasonable default for short-form talking/quote content.
-DEFAULT_CATEGORY_ID = "22"
-
 
 @register
 @dataclasses.dataclass
 class Youtube(BaseUploader):
+
+
+    SCOPES = ["https://www.googleapis.com/auth/youtube.upload"]
 
     def __post_init__(self):
         if not getattr(self.secrets, "youtube_client_secret_file", None):
@@ -32,18 +31,26 @@ class Youtube(BaseUploader):
                 "YouTube Data API v3 enabled."
             )
 
+    @property
+    def category_id(self):
+        _id = self.config.youtube_category_id
+        if _id:
+            return str(_id)
+        else:
+            return '22'
+
     def _credentials(self) -> Credentials:
         token_path = Path(self.secrets.youtube_token_file)
         creds = None
         if token_path.exists():
-            creds = Credentials.from_authorized_user_file(str(token_path), SCOPES)
+            creds = Credentials.from_authorized_user_file(str(token_path), self.SCOPES)
 
         if not creds or not creds.valid:
             if creds and creds.expired and creds.refresh_token:
                 creds.refresh(Request())
             else:
                 flow = InstalledAppFlow.from_client_secrets_file(
-                    self.secrets.youtube_client_secret_file, SCOPES
+                    self.secrets.youtube_client_secret_file, self.SCOPES
                 )
                 creds = flow.run_local_server(port=0)
             token_path.write_text(creds.to_json())
@@ -59,7 +66,7 @@ class Youtube(BaseUploader):
                 "title": title,
                 "description": description,
                 "tags": tags,
-                "categoryId": DEFAULT_CATEGORY_ID,
+                "categoryId": self.category_id,
             },
             "status": {
                 "privacyStatus": self.config.privacy_status,
