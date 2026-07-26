@@ -8,7 +8,7 @@ from sqlmodel import Session, select
 from sqlalchemy.orm import selectinload
 
 from . import config, sql
-from utils import schemas, duration
+from .utils import schemas, duration
 
 logger = logging.getLogger(__name__)
 
@@ -34,9 +34,15 @@ class SessionInfo:
     def return_status(self):
         return self.generation_session.status
 
+    @staticmethod
+    def base_path():
+        p = Path(__file__).parent / 'files'
+        p.mkdir(exist_ok=True, parents=True)
+        return p
+
     @property
     def file(self):
-        p = Path(__file__).parent / 'files' / str(self.generation_session.id)
+        p = self.base_path() / str(self.generation_session.id)
         p.mkdir(exist_ok=True, parents=True)
         return p
 
@@ -130,15 +136,36 @@ class SessionInfo:
         return ids
 
     @staticmethod
+    def all_files_id():
+        files = SessionInfo.base_path()
+        ids = [x for x in files.iterdir() if x.is_dir() and x.name.isdigit()]
+        return ids
+
+    @staticmethod
     def delete_stray_dirs():
-        ids = SessionInfo.all_sessions_id()
-        p = Path(__file__).parent / 'files'
-        gen_sessions = list()
-        for dir in p.iterdir():
-            name = dir.name
-            if name.isdigit() and int(name) not in ids:
-                gen_sessions.append(dir)
-        print(gen_sessions)
+        sql_ids = SessionInfo.all_sessions_id()
+        files_ids = SessionInfo.all_files_id()
+
+        stray_files = [_id for _id in files_ids if _id not in sql_ids]
+        for stray_file in stray_files:
+            stray_file.unlink()
+
+    @staticmethod
+    def delete_stray_sql_entries():
+        sql_ids = SessionInfo.all_sessions_id()
+        files_ids = SessionInfo.all_files_id()
+
+        stray_sqls = [_id for _id in sql_ids if _id not in files_ids]
+        for stray_sql in stray_sqls:
+            obj = SessionInfo.from_sql(stray_sql)
+            obj.delete()
+
+    @staticmethod
+    def reset():
+        database = Path(__file__).parent / 'database.db'
+        shutil.rmtree(database)
+
+        SessionInfo.delete_stray_dirs()
 
     @classmethod
     def from_config(cls, app_config: config.AppConfig) -> "SessionInfo":
@@ -290,14 +317,4 @@ class SessionInfo:
         if tmp_folder.exists():
             shutil.rmtree(str(tmp_folder))
 
-    @staticmethod
-    def delete_stray_files():
-        ids = SessionInfo.all_sessions_id()
 
-        # clear up stray dirs
-        for id in ids:
-            try:
-                obj = SessionInfo.from_sql(id)
-                obj.delete()
-            except Exception:
-                logger.exception("Failed to clear session %s, continuing with the rest", id)
