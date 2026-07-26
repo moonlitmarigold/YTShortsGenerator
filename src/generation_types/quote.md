@@ -100,7 +100,7 @@ A single, locked-for-the-whole-video set of choices controlling the automatic wo
       "id": "integer, sequential starting at 1",
       "type": "hook | quote_core | body | call_to_action",
       "spoken_text": "string, natural voiceover sentence(s)",
-      "duration_ms": "integer, milliseconds this scene is shown",
+      "duration_seconds": "number, seconds this scene is shown",
       "style_override": "object with any style_defaults keys to override for this scene only, or null"
     }
   ],
@@ -153,14 +153,14 @@ A single, locked-for-the-whole-video set of choices controlling the automatic wo
       "id": 1,
       "type": "hook",
       "spoken_text": "You've rewritten that to-do list five times today and done none of it.",
-      "duration_ms": 3000,
+      "duration_seconds": 3,
       "style_override": null
     },
     {
       "id": 2,
       "type": "quote_core",
       "spoken_text": "Procrastination isn't laziness, it's fear wearing a to-do list as a disguise.",
-      "duration_ms": 4000,
+      "duration_seconds": 4,
       "style_override": {
         "primary_text_color": "#FFD700"
       }
@@ -169,28 +169,28 @@ A single, locked-for-the-whole-video set of choices controlling the automatic wo
       "id": 3,
       "type": "body",
       "spoken_text": "Your brain isn't broken. It's protecting you from the risk of trying and failing in front of people who matter to you.",
-      "duration_ms": 4500,
+      "duration_seconds": 4.5,
       "style_override": null
     },
     {
       "id": 4,
       "type": "body",
       "spoken_text": "That's why the assignment feels heavier at 11pm than it did at 9am, nothing about the task changed, only your fear had more time to grow.",
-      "duration_ms": 5000,
+      "duration_seconds": 5,
       "style_override": null
     },
     {
       "id": 5,
       "type": "body",
       "spoken_text": "The fix isn't motivation, it's shrinking the first step until it's smaller than your fear.",
-      "duration_ms": 4500,
+      "duration_seconds": 4.5,
       "style_override": null
     },
     {
       "id": 6,
       "type": "call_to_action",
       "spoken_text": "Save this for the next time the list feels too big to start.",
-      "duration_ms": 4000,
+      "duration_seconds": 4,
       "style_override": null
     }
   ],

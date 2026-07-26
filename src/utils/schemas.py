@@ -108,7 +108,7 @@ class Scene(BaseModel):
     id: int
     type: SceneType
     spoken_text: str
-    duration_ms: int
+    duration_seconds: float
     style_override: Optional[dict] = None
 
 class VideoGuidance(BaseModel):

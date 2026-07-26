@@ -16,8 +16,6 @@ class Audio:
     config: utils.AudioConfig
     secrets: type[BaseSettings]
 
-    JAMENDO_API = "https://api.jamendo.com/v3.0/tracks/"
-
 
     def __post_init__(self):
         self.music_types = {
@@ -68,6 +66,7 @@ class Audio:
             seg = AudioSegment.from_file(str(path))
             seg = self._strip_silence(seg)
             seg = self._speed_up(seg)
+            utils.duration.set_duration(scene, seg.duration_seconds)
             combined += seg
             if scene.id != last_session_id and self.config.silence != 0:
                 combined += AudioSegment.silent(self.config.silence)

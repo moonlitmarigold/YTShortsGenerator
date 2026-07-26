@@ -224,7 +224,7 @@ class SessionInfo:
                 scene_order=scene.id,
                 type=scene.type.value,
                 spoken_text=scene.spoken_text,
-                duration_ms=scene.duration_ms,
+                duration_seconds=scene.duration_seconds,
                 style_override=scene.style_override,
             )
             for scene in script.scenes

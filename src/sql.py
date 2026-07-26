@@ -63,7 +63,7 @@ class Scene(SQLModel, table=True):
     scene_order: int
     type: str
     spoken_text: str
-    duration_ms: int
+    duration_seconds: float
     style_override: Optional[dict] = Field(default=None, sa_column=Column(JSON))
 
     video: Video = Relationship(back_populates="scenes")

@@ -129,10 +129,6 @@ class PipelineBuilder:
         v = video.Video()
         self.add_steps(Video=v)
 
-    # Built but deliberately not in build_list() yet: this step publishes the
-    # video to a real external platform, so it should only run once the user
-    # opts in (config has `uploader:` set) rather than firing on every pipeline
-    # run. Add `self._upload` to build_list() to make it live.
     def _upload(self):
         if self.app_config.uploader is None:
             return

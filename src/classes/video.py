@@ -49,6 +49,6 @@ class Video:
         )
         audio = in_stream.audio
 
-        out = ffmpeg.output(video, audio, str('./test.mp4'), acodec='copy')
+        out = ffmpeg.output(video, audio, session.output_video(), acodec='copy')
         ffmpeg.run(out, overwrite_output=True)
 

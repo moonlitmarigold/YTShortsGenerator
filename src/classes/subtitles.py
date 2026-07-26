@@ -4,6 +4,7 @@ from SubtitleFX import Formatters, Config, Style, DockerConfig, BorderConfig, Su
 import pysubs2
 from pathlib import Path
 import dataclasses
+import pydub
 
 @dataclasses.dataclass
 class Subtitles:
@@ -37,18 +38,26 @@ class Subtitles:
 
         subtitles_files:list[pysubs2.ssafile.SSAFile] = list()
 
-        for scene in script.scenes:
-            subtitles_files.append(
-                self.edit_sub_file(
-                    scene,
-                    session,
-                    config,
-                )
+        #TODO: Add duration for every scene for the subtitles to work properly
+        scenes = script.scenes
+        base_duration = 0.0
+        for scene in scenes:
+            file = self.edit_sub_file(
+                scene,
+                session,
+                config,
             )
+            file.shift(base_duration)
+            base_duration += scene.duration_seconds
 
         # add events to export file
+
         output_file = subtitles_files[0]
-        for file in subtitles_files[1:]:
+        base_duration = scenes[0].duration_seconds
+        for i, file in enumerate(subtitles_files[1:]):
+            file.shift(base_duration)
+            base_duration += scenes[i+1].duration_seconds
+
             events = output_file.events
             events.extend(file.events)
             output_file.events = events
@@ -126,6 +135,7 @@ class Subtitles:
 
     @staticmethod
     def edit_sub_file(scene:utils.schemas.Scene, session:sessions.SessionInfo, config:Config):
+        # TODO: fill_subtitle time is broken, since the whole input video duration is used
         scene_id = scene.id
         input_path = session.transcribe_path(scene_id)
 

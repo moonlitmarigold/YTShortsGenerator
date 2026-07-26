@@ -37,14 +37,14 @@ input_parse = '''
       "id": 1,
       "type": "hook",
       "spoken_text": "You feel like you're always running—that your worth is tied to the last pull request.",
-      "duration_ms": 3500,
+      "duration_seconds": 3.5,
       "style_override": null
     },
     {
       "id": 2,
       "type": "quote_core",
       "spoken_text": "Remember that you are not a CPU core running at peak capacity. You need scheduled downtime.",
-      "duration_ms": 6000,
+      "duration_seconds": 6,
       "style_override": {
         "primary_text_color": "#EAEAEA"
       }
@@ -53,28 +53,28 @@ input_parse = '''
       "id": 3,
       "type": "body",
       "spoken_text": "Burnout isn't a personal failure. It’s a systemic resource management problem that companies often forget to factor in.",
-      "duration_ms": 6000,
+      "duration_seconds": 6,
       "style_override": null
     },
     {
       "id": 4,
       "type": "body",
       "spoken_text": "Peak performance isn't about logging the most hours. It’s about designing sustainable systems—including your own mental health.",
-      "duration_ms": 8000,
+      "duration_seconds": 8,
       "style_override": null
     },
     {
       "id": 5,
       "type": "body",
       "spoken_text": "Build in the downtime. Treat your rest time like you treat a critical deployment—non-negotiable.",
-      "duration_ms": 7000,
+      "duration_seconds": 7,
       "style_override": null
     },
     {
       "id": 6,
       "type": "call_to_action",
       "spoken_text": "If this resonates, send it to the teammate who needs a reminder that they are allowed to rest.",
-      "duration_ms": 9000,
+      "duration_seconds": 9,
       "style_override": null
     }
   ],
