@@ -16,7 +16,7 @@ input_parse = '''
     "platform": "reels"
   },
   "style_defaults": {
-    "font_family": "Bebas Neue",
+    "font_family": "Lato",
     "font_size": 44,
     "primary_text_color": "#FFFFFF",
     "highlight_color": "#9B59B6",
@@ -158,7 +158,8 @@ def test_subtitles():
     except Exception as e:
         raise e
     finally:
-        session.delete()
+        pass
+        #session.delete()
 
 def test_background():
     app_config, env, session = init()

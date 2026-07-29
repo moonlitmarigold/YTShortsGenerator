@@ -6,6 +6,7 @@ def test_pipeline_build():
     env_file = Path('.env')
 
     with pipeline.PipelineBuilder(config_file, env_file) as pipeline_builder:
+        pipeline_builder.build_list()
         _pipeline = pipeline_builder.build()
 
     print(_pipeline.run())
