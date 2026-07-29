@@ -1,10 +1,12 @@
 from .. import sessions
 from .. import utils
-from SubtitleFX import Formatters, Config, Style, DockerConfig, BorderConfig, SubtitleBuild
+from SubtitleFX import Formatters, Config, Style, DockerConfig, BorderConfig, SubtitleBuild, docker_module
 import pysubs2
 from pathlib import Path
 import dataclasses
-import pydub
+from typing import Optional
+import logging
+logger = logging.getLogger(__name__)
 
 @dataclasses.dataclass
 class Subtitles:
@@ -31,10 +33,12 @@ class Subtitles:
         config:Config = self.return_config(
             script.style_defaults,
             self.resolution,
-            session.background_video(),
             session.fonts_path(),
             self.background_config
         )
+
+        container = docker_module.Container.return_base_container(config)
+        config.container = container
 
         subtitles_files:list[pysubs2.ssafile.SSAFile] = list()
 
@@ -47,28 +51,31 @@ class Subtitles:
                 session,
                 config,
             )
-            file.shift(base_duration)
+            logger.info(f'Current duration: {base_duration}')
+            file.shift(s=base_duration)
             base_duration += scene.duration_seconds
+            subtitles_files.append(file)
 
         # add events to export file
 
         output_file = subtitles_files[0]
-        base_duration = scenes[0].duration_seconds
-        for i, file in enumerate(subtitles_files[1:]):
-            file.shift(base_duration)
-            base_duration += scenes[i+1].duration_seconds
-
+        for file in subtitles_files[1:]:
             events = output_file.events
             events.extend(file.events)
             output_file.events = events
         output_file.save(session.subtitle_file(), format_='ass')
 
     @staticmethod
-    def return_config(style_class:utils.schemas.StyleDefaults, resolution:tuple[int, int], video:Path, fonts_path:Path, background_config:utils.SubtitleBackground=None,):
+    def return_config(
+            style_class:utils.schemas.StyleDefaults,
+            resolution:tuple[int, int],
+            fonts_path:Path,
+            background_config:Optional[utils.SubtitleBackground]=None,
+    ):
         highlight_class = style_class.highlighting
 
         docker_conf = DockerConfig(
-            fonts_path=[str(font) for font in fonts_path.iterdir() if font.suffix == '.tff'],
+            fonts_path=[font for font in fonts_path.iterdir() if font.suffix == '.ttf'],
             force_install=True,
         )
 
@@ -109,7 +116,6 @@ class Subtitles:
 
         conf =  Config(
             input='', output=None,
-            input_video=str(video),
             subtitle_style=Style(
                 fontname=style_class.font_family,
                 fontsize=style_class.font_size,
@@ -134,7 +140,11 @@ class Subtitles:
 
 
     @staticmethod
-    def edit_sub_file(scene:utils.schemas.Scene, session:sessions.SessionInfo, config:Config):
+    def edit_sub_file(
+            scene:utils.schemas.Scene,
+            session:sessions.SessionInfo,
+            config:Config,
+        ):
         # TODO: fill_subtitle time is broken, since the whole input video duration is used
         scene_id = scene.id
         input_path = session.transcribe_path(scene_id)
@@ -143,6 +153,7 @@ class Subtitles:
         tmp_subfile = pysubs2.SSAFile().from_file(input_path.open())
 
         config.input = tmp_subfile
+        config.duration = scene.duration_seconds
 
         with SubtitleBuild(config) as Build:
             Build.run()
