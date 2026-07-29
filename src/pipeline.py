@@ -1,7 +1,9 @@
 import pydantic
 from . import config, sessions
-from .classes import Prompt, Tts, Transcribe, Audio, Planner, background, video, subtitles, thumbnail, Upload
+from .classes import Prompt, Tts, Transcribe, Audio, Planner, background as _back, video as vid, subtitles as sub, thumbnail as thumb, Upload
 from pathlib import Path
+from typing import Callable, Optional
+from utils import errors, extra_configs
 
 import logging
 logger = logging.getLogger(__name__)
@@ -35,6 +37,7 @@ class Pipeline:
                 logger.error('Error running step {}: {}'.format(key, e))
                 self.session_obj.set_error(str(e))
                 self.session_obj.set_status(sessions.Status.FAILED)
+                self.session_obj.save()
                 raise e
 
         self.session_obj.set_status(sessions.Status.FINISHED)
@@ -47,33 +50,52 @@ class PipelineBuilder:
         self.path_config = path_config
         self.path_env = path_env
         self.app_config:config.AppConfig = None
-        self.env_config:config.Secrets = None
+        self.env_config:extra_configs.Secrets = None
+
+        self._build_list:tuple[Callable] = ()
+
+        self.__base_build_list = {
+            'Planner': self.plan,
+            'Prompt': self.prompt,
+            'TTS': self.tts,
+            'Transcribe': self.transcribe,
+            'Audio': self.audio,
+            'Background': self.background,
+            'Thumbnail': self.thumbnail,
+            'Subtitles': self.subtitles,
+            'Video': self.video,
+        }
+
 
 
     def add_steps(self, **kwargs):
         self.pipeline.add_steps(**kwargs)
 
-    def build_list(self):
-        return (
-            self._config,
-            self._session,
-            self._plan,
-            self._prompt,
-            self._tts,
-            self._transcribe,
-            self._audio,
-            self._background,
-            self._thumbnail,
-            self._subtitles,
-            self._video,
-        )
+    def build_list(self, start_step:Optional[str]=None, session_obj:Optional[sessions.SessionInfo]=None):
+        _list = [self._config]
+        if session_obj:
+            self.pipeline.set_session_obj(session_obj)
+        else:
+            _list.append(self.session)
+
+        if start_step:
+            keys = [str(x) for x in self.__base_build_list.keys()]
+            _index = keys.index(start_step)
+            values = [x for x in self.__base_build_list.values()]
+            _list.extend(values[_index:])
+        else:
+            _list.extend(self.__base_build_list.values())
+        return _list
+
 
     def build(self):
-        logger.debug('Building pipeline')
-        build_list = self.build_list()
+        if not self._build_list:
+            raise errors.NoPipelineBuildList()
 
-        logger.info('Building pipeline with {} steps'.format(len(build_list)))
-        for step in build_list:
+        logger.debug('Building pipeline')
+
+        logger.info('Building pipeline with {} steps'.format(len(self._build_list)))
+        for step in self._build_list:
             step()
 
         logger.info('Finished Building the pipeline')
@@ -85,27 +107,27 @@ class PipelineBuilder:
         self.app_config, self.env_config = config.open_config_env(self.path_config, self.path_env)
         logger.debug('config after loading:\n{}'.format(self.app_config.model_dump_json()))
 
-    def _prompt(self):
+    def prompt(self):
         p = Prompt.Prompt(self.app_config.provider, self.env_config)
         self.add_steps(Prompt=p)
 
-    def _session(self):
+    def session(self, _session_obj:Optional[sessions.SessionInfo] = None):
         s = sessions.SessionInfo.from_config(self.app_config)
         self.pipeline.set_session_obj(s)
 
-    def _tts(self):
+    def tts(self):
         t = Tts.TTS(self.app_config.tts, self.env_config)
         self.add_steps(TTS=t)
 
-    def _transcribe(self):
+    def transcribe(self):
         t = Transcribe.Transcribe(self.app_config.transcribe, self.env_config)
-        self.add_steps(transcribe=t)
+        self.add_steps(Transcribe=t)
 
-    def _audio(self):
+    def audio(self):
         a = Audio.Audio(self.app_config.audio, self.env_config)
         self.add_steps(Audio=a)
 
-    def _plan(self):
+    def plan(self):
         p = Planner.Planner(
             self.app_config.generation_type,
             self.app_config.metadata,
@@ -113,23 +135,23 @@ class PipelineBuilder:
         )
         self.add_steps(Planner=p)
 
-    def _background(self):
-        b = background.Background(self.app_config.resolution, self.app_config.background_speed)
+    def background(self):
+        b = _back.Background(self.app_config.resolution, self.app_config.background_speed)
         self.add_steps(Background=b)
 
-    def _thumbnail(self):
-        t = thumbnail.Thumbnail(self.app_config.resolution)
+    def thumbnail(self):
+        t = thumb.Thumbnail(self.app_config.resolution)
         self.add_steps(Thumbnail=t)
 
-    def _subtitles(self):
-        s = subtitles.Subtitles(self.app_config.resolution)
+    def subtitles(self):
+        s = sub.Subtitles(self.app_config.resolution)
         self.add_steps(Subtitles=s)
 
-    def _video(self):
-        v = video.Video()
+    def video(self):
+        v = vid.Video()
         self.add_steps(Video=v)
 
-    def _upload(self):
+    def upload(self):
         if self.app_config.uploader is None:
             return
         u = Upload.Upload(self.app_config.uploader, self.env_config)

@@ -6,9 +6,8 @@ import shutil
 from pathlib import Path
 from sqlmodel import Session, select
 from sqlalchemy.orm import selectinload
-
 from . import config, sql
-from .utils import schemas, duration
+from .utils import schemas, duration, fonts
 
 logger = logging.getLogger(__name__)
 
@@ -105,7 +104,7 @@ class SessionInfo:
 
     @staticmethod
     def fonts_path():
-        p =  Path(__file__).parent / "fonts"
+        p = Path(__file__).parent / "fonts"
         p.mkdir(exist_ok=True)
         return p
 

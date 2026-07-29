@@ -1,6 +1,7 @@
 from . import sql, sessions
 import argparse
 import logging
+from . import menu
 
 logger = logging.getLogger(__name__)
 
@@ -18,8 +19,11 @@ if __name__ == "__main__":
     if args.clear:
         sessions.SessionInfo.delete_stray_dirs()
         sessions.SessionInfo.delete_stray_sql_entries()
-
-    if args.reset:
+    elif args.reset:
         sessions.SessionInfo.reset()
+    else:
+        menu.Menu().start()
+
+
 
 
