@@ -9,7 +9,7 @@ from moviepy.audio.fx import MultiplyVolume
 class Video:
 
     def run(self, session:sessions.SessionInfo):
-        duration = session.script.video_metadata.total_duration_seconds
+        duration = session.duration_seconds
 
         # load in the needed clips
         video = VideoFileClip(session.background_video())
@@ -49,6 +49,6 @@ class Video:
         )
         audio = in_stream.audio
 
-        out = ffmpeg.output(video, audio, session.output_video(), acodec='copy')
+        out = ffmpeg.output(video, audio, str(session.output_video()), acodec='copy')
         ffmpeg.run(out, overwrite_output=True)
 

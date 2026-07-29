@@ -29,8 +29,7 @@ class Background:
 
         # audio duration
         audio_duration = session.duration_seconds
-        # raw footage needed before speeding up, so the final clip still matches audio_duration
-        raw_duration = audio_duration * self.speed
+        threshold_duration = audio_duration * 1.1
 
         video_description = list()
 
@@ -49,7 +48,7 @@ class Background:
             clips.append(clip)
             cur_duration += clip.duration
             logger.debug(f'Current clip duration {cur_duration}s')
-            if cur_duration > raw_duration:
+            if cur_duration > threshold_duration:
                 break
 
         # build the video des
@@ -59,10 +58,10 @@ class Background:
         # extra: For long videos
         if len(clips) == 1:
             output_clip = concatenate_videoclips(clips)
-            rand_int = random.randint(0, math.floor(output_clip.duration-raw_duration))
-            output_clip = output_clip.subclipped(rand_int, math.floor(rand_int+raw_duration))
+            rand_int = random.randint(0, math.floor(output_clip.duration-threshold_duration))
+            output_clip = output_clip.subclipped(rand_int, math.floor(rand_int+threshold_duration))
         else:
-            output_clip = concatenate_videoclips(clips).subclipped(0, raw_duration)
+            output_clip = concatenate_videoclips(clips).subclipped(0, threshold_duration)
 
         output_clip = self._speed_up(output_clip)
 
