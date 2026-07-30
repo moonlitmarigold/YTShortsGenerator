@@ -5,7 +5,6 @@ import logging
 import shutil
 from pathlib import Path
 from sqlmodel import Session, select
-from sqlalchemy.orm import selectinload
 from . import config, sql
 from .utils import schemas, duration, fonts
 
@@ -153,16 +152,17 @@ class SessionInfo:
         sql_ids = SessionInfo.all_sessions_id()
         files_ids = SessionInfo.all_files_id()
 
-        stray_files = [_id for _id in files_ids if _id not in sql_ids]
+        stray_files = [_id for _id in files_ids if int(_id.name) not in sql_ids]
         for stray_file in stray_files:
-            stray_file.unlink()
+            shutil.rmtree(stray_file)
 
     @staticmethod
     def delete_stray_sql_entries():
         sql_ids = SessionInfo.all_sessions_id()
         files_ids = SessionInfo.all_files_id()
+        file_ids = {int(_id.name) for _id in files_ids}
 
-        stray_sqls = [_id for _id in sql_ids if _id not in files_ids]
+        stray_sqls = [_id for _id in sql_ids if _id not in file_ids]
         for stray_sql in stray_sqls:
             obj = SessionInfo.from_sql(stray_sql)
             obj.delete()
@@ -191,12 +191,7 @@ class SessionInfo:
     def from_sql(cls, generation_session_id: int) -> "SessionInfo":
         engine = sql.return_engine()
         with Session(engine) as session:
-            statement = (
-                select(sql.GenerationSession)
-                .where(sql.GenerationSession.id == generation_session_id)
-                .options(selectinload(sql.GenerationSession.video).selectinload(sql.Video.scenes))
-            )
-            generation_session = session.exec(statement).first()
+            generation_session = session.get(sql.GenerationSession, generation_session_id)
             if generation_session is None:
                 raise ValueError(f"No generation session with id {generation_session_id}")
 
@@ -274,9 +269,26 @@ class SessionInfo:
             session.commit()
 
             if self.script is not None:
-                video, scenes = self._build_video_rows()
-                video.scenes = scenes
-                session.add(video)
+                new_video, new_scenes = self._build_video_rows()
+
+                existing_video = session.exec(
+                    select(sql.Video).where(sql.Video.generation_session_id == self.generation_session.id)
+                ).first()
+
+                if existing_video is None:
+                    new_video.scenes = new_scenes
+                    session.add(new_video)
+                else:
+                    skip_fields = {"id", "generation_session_id", "created_at"}
+                    for field in sql.Video.model_fields:
+                        if field in skip_fields:
+                            continue
+                        setattr(existing_video, field, getattr(new_video, field))
+
+                    for scene in existing_video.scenes:
+                        session.delete(scene)
+                    existing_video.scenes = new_scenes
+
                 session.commit()
 
         return self
@@ -300,8 +312,10 @@ class SessionInfo:
                 if generation_session is None:
                     return
 
-                video = generation_session.video
-                if video is not None:
+                videos = session.exec(
+                    select(sql.Video).where(sql.Video.generation_session_id == self.id)
+                ).all()
+                for video in videos:
                     performances = session.exec(
                         select(sql.VideoPerformance).where(sql.VideoPerformance.video_id == video.id)
                     ).all()
