@@ -3,7 +3,7 @@ from . import config, sessions
 from .classes import Prompt, Tts, Transcribe, Audio, Planner, background as _back, video as vid, subtitles as sub, thumbnail as thumb, Upload
 from pathlib import Path
 from typing import Callable, Optional
-from utils import errors, extra_configs
+from .utils import errors, extra_configs
 
 import logging
 logger = logging.getLogger(__name__)
@@ -44,6 +44,18 @@ class Pipeline:
         logger.info('Finished with the pipeline')
     
 class PipelineBuilder:
+
+    steps = (
+        'Planner',
+        'Prompt',
+        'TTS',
+        'Transcribe',
+        'Audio',
+        'Background',
+        'Thumbnail',
+        'Subtitles',
+        'Video',
+    )
     
     def __init__(self, path_config:Path | None = None, path_env:Path | None = None):
         self.pipeline = Pipeline()

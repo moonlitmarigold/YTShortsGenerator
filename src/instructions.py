@@ -3,14 +3,16 @@ from .pipeline import PipelineBuilder, Pipeline
 from .utils import errors
 from typing import Callable, Optional
 import dataclasses
+import json
 import os
 from pathlib import Path
+from rich.console import Console
 
 @dataclasses.dataclass
 class Instruction:
 
     session:Optional[SessionInfo] = None
-    _exec:Optional[Callable] = None
+    _exec:Optional[Callable] | Optional[str] = None
 
     _pipeline_exec:bool = False
 
@@ -23,7 +25,7 @@ class Instruction:
                 )
                 _pipeline = pipeline_builder.build()
         else:
-            if not self.session is None and not self._exec is None:
+            if self.session is None and self._exec is None:
                 raise RuntimeError('Both values cant be none')
             self._exec(self.session)
 
@@ -53,4 +55,40 @@ class Instruction:
     @classmethod
     def new(cls):
         return Instruction().is_pipeline()
-        
+
+    @classmethod
+    def restart(cls, session:SessionInfo):
+        return Instruction(
+            session,
+            'Prompt',
+        ).is_pipeline()
+
+    @classmethod
+    def restart_from_step(cls, session:SessionInfo, step:Optional[str] = None):
+        return Instruction(
+            session,
+            session.step if not step else step,
+        ).is_pipeline()
+
+    @classmethod
+    def show_script(cls, session:SessionInfo):
+        return Instruction(
+            session,
+            cls._print_script,
+        )
+
+    @staticmethod
+    def _print_script(session: SessionInfo):
+        raw = session.generation_session.raw_llm_output
+        if not raw:
+            Console().print("[yellow]No script generated yet for this session.[/yellow]")
+            return
+
+        from .classes import Prompt
+        try:
+            data = Prompt.Prompt.clean_and_parse_json(raw)
+        except (ValueError, json.JSONDecodeError):
+            data = raw
+
+        print(json.dumps(data, indent=2, default=str))
+

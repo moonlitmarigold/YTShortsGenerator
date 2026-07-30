@@ -108,6 +108,14 @@ class SessionInfo:
         p.mkdir(exist_ok=True)
         return p
 
+    @property
+    def step(self):
+        return self.generation_session.step
+
+    @property
+    def is_finished(self):
+        return self.return_status == Status.FINISHED
+
     def set_status(self, status: Status):
         self.generation_session.status = status.value
 
