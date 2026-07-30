@@ -24,6 +24,7 @@ class Instruction:
                     self.session
                 )
                 _pipeline = pipeline_builder.build()
+                _pipeline.run()
         else:
             if self.session is None and self._exec is None:
                 raise RuntimeError('Both values cant be none')

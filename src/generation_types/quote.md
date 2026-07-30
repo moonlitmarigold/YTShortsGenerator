@@ -18,6 +18,7 @@ The background visual is a static looping clip (e.g. gameplay footage). You choo
 - `video_metadata.tags` should be 3–8 relevant, lowercase, no-`#` keywords (platform hashtags are added later downstream).
 - `video_metadata.video_description` is a short (1–3 sentence) platform post description/caption — a hook line plus an optional soft call-to-action. Leave it `null` if you have nothing worth adding beyond the title.
 - `style_defaults.font_family` **must be picked verbatim from the Available Fonts list below** — do not invent a font name that isn't listed there, it will not render correctly.
+- dont use a low (>15) `style_defaults.word_max` with fade. Choose either one of both options
 
 ## Input Parameters
 

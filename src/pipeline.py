@@ -84,6 +84,7 @@ class PipelineBuilder:
         self.pipeline.add_steps(**kwargs)
 
     def build_list(self, start_step:Optional[str]=None, session_obj:Optional[sessions.SessionInfo]=None):
+        logger.info(f'Using start step {start_step} for building the build_list')
         _list = [self._config]
         if session_obj:
             self.pipeline.set_session_obj(session_obj)
@@ -97,7 +98,8 @@ class PipelineBuilder:
             _list.extend(values[_index:])
         else:
             _list.extend(self.__base_build_list.values())
-        return _list
+        self._build_list = _list
+        return self
 
 
     def build(self):
