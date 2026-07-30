@@ -4,6 +4,7 @@ from .classes import Prompt, Tts, Transcribe, Audio, Planner, background as _bac
 from pathlib import Path
 from typing import Callable, Optional
 from .utils import errors, extra_configs
+from rich.progress import Progress
 
 import logging
 logger = logging.getLogger(__name__)
@@ -26,19 +27,24 @@ class Pipeline:
 
         self.session_obj.set_status(sessions.Status.RUNNING)
 
-        for key, value in self.steps.items():
-            logger.info('Running step: {}'.format(key))
-            try:
-                value.run(self.session_obj)
-                logger.info('Finished step: {}'.format(key))
-                self.session_obj.set_step(key)
-                self.session_obj.save()
-            except Exception as e:
-                logger.error('Error running step {}: {}'.format(key, e))
-                self.session_obj.set_error(str(e))
-                self.session_obj.set_status(sessions.Status.FAILED)
-                self.session_obj.save()
-                raise e
+        with Progress() as progress:
+            task = progress.add_task('Running pipeline', total=len(self.steps))
+
+            for key, value in self.steps.items():
+                progress.update(task, description=f'Running step: {key}')
+                logger.info('Running step: {}'.format(key))
+                try:
+                    value.run(self.session_obj)
+                    logger.info('Finished step: {}'.format(key))
+                    self.session_obj.set_step(key)
+                    self.session_obj.save()
+                    progress.advance(task)
+                except Exception as e:
+                    logger.error('Error running step {}: {}'.format(key, e))
+                    self.session_obj.set_error(str(e))
+                    self.session_obj.set_status(sessions.Status.FAILED)
+                    self.session_obj.save()
+                    raise e
 
         self.session_obj.set_status(sessions.Status.FINISHED)
         logger.info('Finished with the pipeline')
