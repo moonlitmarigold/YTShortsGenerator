@@ -7,8 +7,9 @@ The background visual is a static looping clip (e.g. gameplay footage). You choo
 ## Output Rules (critical)
 
 - Output **ONLY** a single valid JSON object. No Markdown, no code fences, no explanatory text before or after.
-- All numeric fields must be raw numbers (integers), not strings (e.g. `2500`, not `"2500ms"`).
+- All numeric fields must be raw numbers, not strings (e.g. `2500`, not `"2500ms"`). Most are integers; `font_size` fields are the one exception and may be decimals (e.g. `6.5`).
 - Never leave a trailing comma anywhere in the JSON.
+- `font_size` (in `style_defaults` and `style_defaults.highlighting`) is **a percentage of the video's width**, not a pixel or point size — this is what keeps captions legible no matter what resolution the video renders at. See the Subtitle Chunking and Highlighting Configuration sections below for the recommended range.
 - Follow the enums given below exactly — do not invent new values for `pacing_recommendation`, `music_genre`, or `background_genre`.
 - `scenes` must contain at least 4 entries in this order: one `hook`, one `quote_core`, two or more `body`, and one `call_to_action`.
 - Avoid generic self-help clichés ("believe in yourself," "consistency is key," "just keep going," "the grind never stops"). Every quote and body line must feel specific to the topic — as if it couldn't be copy-pasted into a video about a different topic.
@@ -47,6 +48,7 @@ Controls how ordinary (non-highlighted) subtitle text is grouped into on-screen 
 - `word_max` (integer or `null`) — maximum words grouped into one subtitle line when `subtitle_type` is `"joined"`. Leave `null` to use the renderer's default (11).
 - `subtitle_type` (one of `"one_word"`, `"joined"`, `"sentence"`) — `one_word` shows a single word at a time, `joined` groups up to `word_max` words per line, `sentence` splits at sentence boundaries.
 - `fill_sub_times` (boolean) — `true` extends the first subtitle back to the start of the video and the last through to the end, and closes gaps between consecutive lines so captions are never off-screen mid-video.
+- `font_size` (number, 1–25) — base caption font size as **a percentage of the video's width** (not points/pixels), so it renders legibly regardless of the output resolution. 5–9 reads well for normal multi-word captions; lean toward the higher end for `"one_word"`/low `word_max` setups where each line has less text to fit.
 
 ## Highlighting Configuration (`style_defaults.highlighting`)
 
@@ -57,7 +59,7 @@ A single, locked-for-the-whole-video set of choices controlling the automatic wo
 - `as_borders` (boolean) — `true` uses a rounded-border as well as a text-color change (if set) for highlighted words.
 - `fade_ms` (`[fade_in, fade_out]` or `null`) — crossfade duration in milliseconds for each highlight transition.
 - `appear` (boolean) — `true` makes words appear cumulatively rather than replacing each other.
-- `font_size` (integer or `null`) — font size in points used specifically for highlighted words (leave `null` to use `style_defaults.font_size`).
+- `font_size` (number, 1–25, or `null`) — same percentage-of-video-width convention as `style_defaults.font_size`, used specifically for highlighted words (leave `null` to use `style_defaults.font_size`). Highlighted words are usually meant to pop, so this is typically a few points higher than `style_defaults.font_size`, e.g. 7–12.
 
 ## Available Fonts
 
@@ -79,7 +81,7 @@ A single, locked-for-the-whole-video set of choices controlling the automatic wo
   },
   "style_defaults": {
     "font_family": "string, must be one of the Available Fonts listed above",
-    "font_size": "integer, font size in points, e.g. 48",
+    "font_size": "number 1-25, font size as a percentage of video width (not points/pixels), e.g. 6",
     "primary_text_color": "string, hex code like #FFFFFF or #FFF",
     "highlight_color": "string, hex code like #FFFFFF or #FFF",
     "text_position": "top | center | bottom",
@@ -93,7 +95,7 @@ A single, locked-for-the-whole-video set of choices controlling the automatic wo
       "as_borders": "boolean",
       "fade_ms": "[integer, integer] or null",
       "appear": "boolean",
-      "font_size": "integer or null"
+      "font_size": "number 1-25 or null, percentage of video width, e.g. 8"
     }
   },
   "scenes": [
@@ -132,7 +134,7 @@ A single, locked-for-the-whole-video set of choices controlling the automatic wo
   },
   "style_defaults": {
     "font_family": "The Bold Font",
-    "font_size": 48,
+    "font_size": 6,
     "primary_text_color": "#FFFFFF",
     "highlight_color": "#FFD700",
     "text_position": "center",
@@ -146,7 +148,7 @@ A single, locked-for-the-whole-video set of choices controlling the automatic wo
       "as_borders": false,
       "fade_ms": [50, 50],
       "appear": false,
-      "font_size": 56
+      "font_size": 8
     }
   },
   "scenes": [

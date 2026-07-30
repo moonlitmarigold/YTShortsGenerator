@@ -66,6 +66,11 @@ class Subtitles:
         output_file.save(session.subtitle_file(), format_='ass')
 
     @staticmethod
+    def _font_size_px(percent: float, width: int) -> int:
+        """font_size is authored as a percentage of video width so captions stay legible regardless of output resolution."""
+        return round(width * percent / 100)
+
+    @staticmethod
     def return_config(
             style_class:utils.schemas.StyleDefaults,
             resolution:tuple[int, int],
@@ -73,6 +78,7 @@ class Subtitles:
             background_config:Optional[utils.SubtitleBackground]=None,
     ):
         highlight_class = style_class.highlighting
+        video_width = resolution[0]
 
         docker_conf = DockerConfig(
             fonts_path=[font for font in fonts_path.iterdir() if font.suffix == '.ttf'],
@@ -103,7 +109,7 @@ class Subtitles:
             if highlight_class.font_size:
                 highlight_style = Style(
                     primarycolor=style_class.highlight_color,
-                    fontsize=highlight_class.font_size
+                    fontsize=Subtitles._font_size_px(highlight_class.font_size, video_width)
                 )
             else:
                 highlight_style = Style(
@@ -118,7 +124,7 @@ class Subtitles:
             input='', output=None,
             subtitle_style=Style(
                 fontname=style_class.font_family,
-                fontsize=style_class.font_size,
+                fontsize=Subtitles._font_size_px(style_class.font_size, video_width),
                 primarycolor=style_class.primary_text_color,
             ),
             highlight_style=highlight_style,

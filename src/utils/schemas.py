@@ -7,6 +7,20 @@ from . import fonts
 
 HEX_COLOR_RE = re.compile(r'^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$')
 
+# font_size fields are a percentage of the video's width, not an absolute pixel/point
+# value - that's what keeps captions legible across differing output resolutions.
+FONT_SIZE_PERCENT_MIN = 1.0
+FONT_SIZE_PERCENT_MAX = 25.0
+
+
+def _validate_font_size_percent(value: float) -> float:
+    if not (FONT_SIZE_PERCENT_MIN <= value <= FONT_SIZE_PERCENT_MAX):
+        raise ValueError(
+            f'font_size must be a percentage of video width between '
+            f'{FONT_SIZE_PERCENT_MIN} and {FONT_SIZE_PERCENT_MAX}, got {value}'
+        )
+    return value
+
 class Platform(str, Enum):
     tiktok = "tiktok"
     reels = "reels"
@@ -73,11 +87,18 @@ class HighlightConfig(BaseModel):
     as_borders: bool = False
     fade_ms: Optional[tuple[int, int]] = None
     appear: bool = False
-    font_size: Optional[int] = None
+    font_size: Optional[float] = None
+
+    @field_validator("font_size", mode="after")
+    @classmethod
+    def font_size_must_be_reasonable_percent(cls, value):
+        if value is None:
+            return value
+        return _validate_font_size_percent(value)
 
 class StyleDefaults(BaseModel):
     font_family: str
-    font_size: int
+    font_size: float
     primary_text_color: str
     highlight_color: str
     text_position: TextPosition
@@ -95,6 +116,11 @@ class StyleDefaults(BaseModel):
         if not fonts.font_exists(value) and value not in fonts.list_font_families():
             raise ValueError(f'Font {value} does not exist/ is installed on this machine. A file of all accessible fonts is in {fonts.write_font_file()}')
         return value
+
+    @field_validator("font_size", mode="after")
+    @classmethod
+    def font_size_must_be_reasonable_percent(cls, value):
+        return _validate_font_size_percent(value)
 
     @field_validator("primary_text_color", "highlight_color", "background_color", mode="after")
     @classmethod

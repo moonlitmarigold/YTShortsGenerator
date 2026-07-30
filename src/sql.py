@@ -26,7 +26,7 @@ class Video(SQLModel, table=True):
 
     # style_defaults
     font_family: str
-    font_size: int
+    font_size: float
     primary_text_color: str
     highlight_color: str
     text_position: str
@@ -41,7 +41,7 @@ class Video(SQLModel, table=True):
     highlight_as_borders: bool = False
     highlight_fade_ms: Optional[tuple[int, int]] = Field(default=None, sa_column=Column(JSON))
     highlight_appear: bool = False
-    highlight_font_size: Optional[int] = None
+    highlight_font_size: Optional[float] = None
 
     # video_guidance
     pacing_recommendation: str

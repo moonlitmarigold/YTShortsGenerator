@@ -17,7 +17,7 @@ input_parse = '''
   },
   "style_defaults": {
     "font_family": "Lato",
-    "font_size": 44,
+    "font_size": 6,
     "primary_text_color": "#FFFFFF",
     "highlight_color": "#9B59B6",
     "text_position": "center",
@@ -28,7 +28,7 @@ input_parse = '''
       "as_borders": false,
       "fade_ms": [50, 50],
       "appear": false,
-      "font_size": 52
+      "font_size": 8
     }
   },
   "scenes": [
