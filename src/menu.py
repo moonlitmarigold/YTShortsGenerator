@@ -178,6 +178,7 @@ class SQLMenu:
                     str(step):lambda: instructions.Instruction.restart_from_step(session, str(step))()
                 }
             )
+
         menu.show()
 
 class UploadMenu:

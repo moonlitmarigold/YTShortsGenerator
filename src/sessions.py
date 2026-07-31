@@ -211,6 +211,23 @@ class SessionInfo:
                         generation_session_id, exc_info=True,
                     )
 
+            if script is not None:
+                # raw_llm_output only ever holds the original LLM plan. Steps like Audio
+                # measure real durations from the generated audio and persist them onto the
+                # Video/Scene rows - overlay those back on top so a resumed session (Continue /
+                # Restart from a specific step) doesn't silently revert to the LLM's guessed
+                # durations and desync the subtitle timing.
+                video = session.exec(
+                    select(sql.Video).where(sql.Video.generation_session_id == generation_session_id)
+                ).first()
+                if video is not None:
+                    if video.total_duration_seconds is not None:
+                        script.video_metadata.total_duration_seconds = video.total_duration_seconds
+                    duration_by_order = {scene.scene_order: scene.duration_seconds for scene in video.scenes}
+                    for scene in script.scenes:
+                        if scene.id in duration_by_order:
+                            scene.duration_seconds = duration_by_order[scene.id]
+
             session.expunge(generation_session)
             return cls(generation_session, script)
 

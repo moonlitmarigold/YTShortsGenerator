@@ -100,17 +100,20 @@ class PipelineBuilder:
 
     def build_list(self, start_step:Optional[str]=None, session_obj:Optional[sessions.SessionInfo]=None):
         logger.info(f'Using start step {start_step} for building the build_list')
+
         _list = [self._config]
         if session_obj:
             self.pipeline.set_session_obj(session_obj)
         else:
             _list.append(self.session)
 
-        if start_step:
+        if start_step and not start_step == 'Upload':
             keys = [str(x) for x in self.__base_build_list.keys()]
             _index = keys.index(start_step)
             values = [x for x in self.__base_build_list.values()]
             _list.extend(values[_index:])
+        elif start_step and start_step == 'Upload':
+            _list.append(self.upload)
         else:
             _list.extend(self.__base_build_list.values())
         self._build_list = _list
