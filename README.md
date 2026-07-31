@@ -13,4 +13,4 @@
 - Adjust Music on the audio
 - presets for the ai to use in Subtitles
 - corn job
-- edit script (nvim?)
+- fix loading bar

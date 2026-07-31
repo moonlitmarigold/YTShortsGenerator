@@ -81,6 +81,7 @@ if __name__ == "__main__":
         try:
             menu.Menu().start()
         except KeyboardInterrupt:
+            print('')
             print('Goodbye')
 
 

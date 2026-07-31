@@ -1,3 +1,4 @@
+import os
 from dataclasses import dataclass, field
 from enum import Enum
 from typing import Optional
@@ -170,7 +171,7 @@ class SessionInfo:
     @staticmethod
     def reset():
         database = Path(__file__).parent / 'database.db'
-        shutil.rmtree(database)
+        os.remove(str(database))
 
         SessionInfo.delete_stray_dirs()
 
