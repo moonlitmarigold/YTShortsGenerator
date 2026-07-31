@@ -9,6 +9,7 @@ stable-ts
 pydub
 #pytest-xdist
 moviepy
+proglog
 pillow
 ollama
 matplotlib

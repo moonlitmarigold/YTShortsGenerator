@@ -1,5 +1,6 @@
 from .. import sessions
 from .. import utils
+from ..utils import rich_progress
 from moviepy import *
 import math
 from dataclasses import dataclass
@@ -65,7 +66,10 @@ class Background:
 
         output_clip = self._speed_up(output_clip)
 
-        output_clip.write_videofile(str(session.background_video()))
+        output_clip.write_videofile(
+            str(session.background_video()),
+            logger=rich_progress.RichProglogLogger(),
+        )
 
     @staticmethod
     def _fit_to_resolution(clip: VideoClip, resolution: tuple[int, int]) -> VideoClip:

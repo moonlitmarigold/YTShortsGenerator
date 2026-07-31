@@ -27,7 +27,7 @@ The background visual is a static looping clip (e.g. gameplay footage). You choo
 2. **tone** (string) — e.g. "Encouraging and thoughtful," "Aggressive and challenging," "Calm and reflective"
 3. **target_audience** (string) — e.g. "College students," "Entrepreneurs"
 4. **video_length_seconds** (integer) — target total duration, e.g. 20, 30, 45, 60. Scale the number of body scenes and pacing to fit this.
-5. **platform** (string, one of: `"tiktok"`, `"reels"`, `"shorts"`) — subtly affects caption density and hook style; TikTok tolerates more text on screen, Shorts/Reels favor cleaner minimal captions.
+5. **platform** (string, one of: `"tiktok"`, `"reels"`, `"shorts"`) — drives which subtitle preset to follow, see Platform Style Presets below.
 6. **pov** (string, one of: `"direct_address"`, `"narrator"`) — `direct_address` speaks to "you" throughout; `narrator` is third-person/observational.
 
 ## Enums
@@ -41,9 +41,18 @@ The background visual is a static looping clip (e.g. gameplay footage). You choo
 **background_genre**:
 - `minecraft_parkour`, `subway_surfers`, `cooking`, `satisfying_asmr`
 
+## Platform Style Presets
+
+`video_metadata.platform` should drive `style_defaults` toward one of these two tested presets (mirrors `preset_tiktok`/`preset_youtube` in the downstream subtitle renderer) rather than an arbitrary combination:
+
+- **`"tiktok"` or `"reels"`** → TikTok preset: `subtitle_type: "one_word"`, `fill_sub_times: true`, `highlighting.fade_ms: [20, 20]` (snappy, near-instant word transitions). Pair with `pacing_recommendation: "quick_cuts"` or `"rapid_fire"`.
+- **`"shorts"`** → YouTube preset: `subtitle_type: "sentence"`, `highlighting.fade_ms: [50, 50]` (smoother, more deliberate transitions). Pair with `pacing_recommendation: "moderate_with_pauses"` or `"slow_and_steady"`.
+
+Both presets still expect `style_defaults.highlighting.enabled: true` per this generation type's rule above — the preset only decides `subtitle_type` and fade speed, not whether highlighting is on. Choose `font_size`, colors, and `text_position` per the guidance below regardless of preset.
+
 ## Subtitle Chunking (`style_defaults`)
 
-Controls how ordinary (non-highlighted) subtitle text is grouped into on-screen lines. Pick these to match `video_guidance.pacing_recommendation` — e.g. `quick_cuts`/`rapid_fire` pairs naturally with `subtitle_type: "one_word"` or a low `word_max`; `slow_and_steady` pairs with `subtitle_type: "joined"` and a higher `word_max`.
+Controls how ordinary (non-highlighted) subtitle text is grouped into on-screen lines. When `subtitle_type` is `"joined"` (not dictated by the platform preset above), pick `word_max` to match `video_guidance.pacing_recommendation` — e.g. `quick_cuts`/`rapid_fire` pairs naturally with a low `word_max`; `slow_and_steady` pairs with a higher `word_max`.
 
 - `word_max` (integer or `null`) — maximum words grouped into one subtitle line when `subtitle_type` is `"joined"`. Leave `null` to use the renderer's default (11).
 - `subtitle_type` (one of `"one_word"`, `"joined"`, `"sentence"`) — `one_word` shows a single word at a time, `joined` groups up to `word_max` words per line, `sentence` splits at sentence boundaries.
@@ -139,14 +148,14 @@ A single, locked-for-the-whole-video set of choices controlling the automatic wo
     "highlight_color": "#FFD700",
     "text_position": "center",
     "background_color": null,
-    "word_max": 6,
-    "subtitle_type": "joined",
+    "word_max": null,
+    "subtitle_type": "one_word",
     "fill_sub_times": true,
     "highlighting": {
       "enabled": true,
       "word_max": 0,
       "as_borders": false,
-      "fade_ms": [50, 50],
+      "fade_ms": [20, 20],
       "appear": false,
       "font_size": 8
     }
@@ -198,7 +207,7 @@ A single, locked-for-the-whole-video set of choices controlling the automatic wo
     }
   ],
   "video_guidance": {
-    "pacing_recommendation": "moderate_with_pauses",
+    "pacing_recommendation": "quick_cuts",
     "music_genre": "lofi_hiphop",
     "music_energy_curve": "low intro, swell at quote_core, sustain through CTA",
     "background_genre": "subway_surfers"

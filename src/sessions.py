@@ -126,6 +126,10 @@ class SessionInfo:
         self.generation_session.error_message = error
         self.set_status(Status.FAILED)
 
+    def clear_error(self):
+        self.generation_session.error_message = None
+        self.save()
+
     def add_description(self, des:str):
         if self.script.video_metadata.video_description:
             self.script.video_metadata.video_description += '\n'
