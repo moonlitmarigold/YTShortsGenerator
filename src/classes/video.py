@@ -2,6 +2,7 @@
 from moviepy import VideoFileClip, AudioFileClip, CompositeVideoClip, CompositeAudioClip
 from .. import sessions
 from .. import utils
+from ..utils import rich_progress
 import ffmpeg
 from moviepy.audio.fx import MultiplyVolume
 
@@ -16,7 +17,7 @@ class Video:
         audio = AudioFileClip(session.full_audio_path())
         music = AudioFileClip(session.music_path())
 
-        music = music.with_effects([MultiplyVolume(0.4)])
+        music = music.with_effects([MultiplyVolume(0.2)])
 
 
         (CompositeVideoClip(
@@ -32,7 +33,12 @@ class Video:
                 )
             )
         )
-        .write_videofile(str(session.output_video_tmp()), codec="libx264", audio_codec="aac")
+        .write_videofile(
+            str(session.output_video_tmp()),
+            codec="libx264",
+            audio_codec="aac",
+            logger=rich_progress.RichProglogLogger(),
+        )
         )
 
         self._subtitles(session)
