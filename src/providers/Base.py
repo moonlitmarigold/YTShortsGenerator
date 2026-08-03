@@ -1,5 +1,6 @@
 import yaml
 import dataclasses
+from typing import Optional
 from pydantic import BaseModel, Field, field_validator
 from .. import generation_types
 
@@ -12,7 +13,7 @@ def register(cls):
 class ProviderConfig(BaseModel):
     name: str
     model: str
-    url: str = "http://127.0.0.1:11434"  # the fallback lives here now
+    url: Optional[str] = None  # falls back to the provider's own _fallback_provider_url if unset
     num_ctx: int = Field(default=8192, ge=8192)
 
     @field_validator('name', mode='after')
@@ -30,11 +31,11 @@ class BaseProvider:
     _fallback_provider_url:str = "" # For the providers to specify their default URL if not provided in the config
 
     def provider_url(self) -> str:
-        if not self._fallback_provider_url:
+        if self.config.url:
             return self.config.url
-        if self.config.url != self._fallback_provider_url:
+        if self._fallback_provider_url:
             return self._fallback_provider_url
-        return self.config.url
+        raise ValueError(f"{type(self).__name__} requires 'url' to be set in the provider config")
 
     @property
     def num_ctx(self) -> int:

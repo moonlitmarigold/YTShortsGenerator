@@ -8,6 +8,7 @@ class Secrets(BaseSettings):
     model_config = SettingsConfigDict(env_file='.env', env_file_encoding='utf-8', case_sensitive=False)
     youtube_api_key: str               # <- from env YOUTUBE_API_KEY, errors if missing
     elevenlabs_api_key: str | None = None
+    opencode_api_key: str | None = None
     jamendo_client_id: str | None = None
     youtube_client_secret_file: str | None = None  # OAuth client secret JSON downloaded from Google Cloud Console
     youtube_token_file: str = "youtube_token.json"  # where the refreshed OAuth token gets cached after first consent

@@ -7,7 +7,7 @@ import ollama
 @dataclasses.dataclass
 class Ollama(BaseProvider):
 
-    fallback_provider_url: str = "http://127.0.0.1:11434"
+    _fallback_provider_url: str = "http://127.0.0.1:11434"
 
     # Ollama's default context window is 4096. Reasoning models (qwen3, ...) spend
     # thousands of tokens "thinking" before emitting content, so the default is too
