@@ -75,7 +75,10 @@ class Instruction:
 
     @classmethod
     def upload(cls, session:SessionInfo):
-        pass
+        return Instruction(
+            session,
+            'Upload'
+        ).is_pipeline()
 
     @classmethod
     def show_script(cls, session:SessionInfo):

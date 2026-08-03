@@ -25,6 +25,18 @@ parser.add_argument('--config', default=None)
 parser.add_argument('--env', default=None)
 
 
+def ascii_art():
+    art = '''
+ ██    ██ ██████████  ████████ ██                        ██             ████████                                              ██                  
+░░██  ██ ░░░░░██░░░  ██░░░░░░ ░██                       ░██            ██░░░░░░██                                            ░██                  
+ ░░████      ░██    ░██       ░██       ██████  ██████ ██████  ██████ ██      ░░   █████  ███████   █████  ██████  ██████   ██████  ██████  ██████
+  ░░██       ░██    ░█████████░██████  ██░░░░██░░██░░█░░░██░  ██░░░░ ░██          ██░░░██░░██░░░██ ██░░░██░░██░░█ ░░░░░░██ ░░░██░  ██░░░░██░░██░░█
+   ░██       ░██    ░░░░░░░░██░██░░░██░██   ░██ ░██ ░   ░██  ░░█████ ░██    █████░███████ ░██  ░██░███████ ░██ ░   ███████   ░██  ░██   ░██ ░██ ░ 
+   ░██       ░██           ░██░██  ░██░██   ░██ ░██     ░██   ░░░░░██░░██  ░░░░██░██░░░░  ░██  ░██░██░░░░  ░██    ██░░░░██   ░██  ░██   ░██ ░██   
+   ░██       ░██     ████████ ░██  ░██░░██████ ░███     ░░██  ██████  ░░████████ ░░██████ ███  ░██░░██████░███   ░░████████  ░░██ ░░██████ ░███   
+   ░░        ░░     ░░░░░░░░  ░░   ░░  ░░░░░░  ░░░       ░░  ░░░░░░    ░░░░░░░░   ░░░░░░ ░░░   ░░  ░░░░░░ ░░░     ░░░░░░░░    ░░   ░░░░░░  ░░░    '''
+    print(art)
+
 def search_conf():
     path = Path('.').resolve()
     files = [x.name for x in path.iterdir() if x.is_file()]
@@ -64,7 +76,6 @@ def resolve_config_env(conf:Optional[str] = None, env:Optional[str] = None):
 
 if __name__ == "__main__":
     args = parser.parse_args()
-
     if args.log:
         logging.basicConfig(level=logging.DEBUG)
         logger.debug('Test')
@@ -75,12 +86,14 @@ if __name__ == "__main__":
     elif args.reset:
         sessions.SessionInfo.reset()
     else:
+        ascii_art()
         resolve_config_env(args.config, args.env)
         print(f"Config file: {os.environ['config_path']}")
         print(f"Env file: {os.environ['env_path']}")
         try:
             menu.Menu().start()
         except KeyboardInterrupt:
+            print('')
             print('')
             print('Goodbye')
 

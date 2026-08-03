@@ -33,5 +33,5 @@ class SubtitleBackground(BaseModel):
     radius: int
     offset: int
     transformy: int
-    height_scaling: int
+    height_scaling: float
     rounded_border: bool

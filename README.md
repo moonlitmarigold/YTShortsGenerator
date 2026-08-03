@@ -9,6 +9,6 @@
 
 - Youtube Upload
 - Elevenlabs and other AI/providers
-- Adjust Music on the audio
 - corn job
-- fix loading bar
+- topic list
+- setup for the project

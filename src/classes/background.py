@@ -30,7 +30,7 @@ class Background:
 
         # audio duration
         audio_duration = session.duration_seconds
-        threshold_duration = audio_duration * 1.1
+        threshold_duration = audio_duration * 1.5
 
         video_description = list()
 
@@ -60,7 +60,7 @@ class Background:
         if len(clips) == 1:
             output_clip = concatenate_videoclips(clips)
             rand_int = random.randint(0, math.floor(output_clip.duration-threshold_duration))
-            output_clip = output_clip.subclipped(rand_int, math.floor(rand_int+threshold_duration))
+            output_clip = output_clip[rand_int:]
         else:
             output_clip = concatenate_videoclips(clips).subclipped(0, threshold_duration)
 
@@ -89,4 +89,3 @@ class Background:
             width=target_w,
             height=target_h,
         )
-
