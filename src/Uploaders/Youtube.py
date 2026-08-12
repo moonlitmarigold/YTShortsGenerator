@@ -24,7 +24,7 @@ class Youtube(BaseUploader):
     SCOPES = ["https://www.googleapis.com/auth/youtube.upload"]
 
     def __post_init__(self):
-        if not getattr(self.secrets, "youtube_client_secret_file", None):
+        if not getattr(self.secrets, "youtube_client_secret_file", None) and self.config.auto_upload:
             raise ValueError(
                 "youtube_client_secret_file is not set (add it to .env). "
                 "Download it from the Google Cloud Console for a project with the "

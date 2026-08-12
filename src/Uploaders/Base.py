@@ -15,6 +15,7 @@ class UploaderConfig(BaseModel):
     made_for_kids: bool = False
     youtube_category_id:Optional[int] = None
     description_message:str = "Don't forget to like, comment, and subscribe for more!"
+    auto_upload:bool = True
 
     @field_validator('name', mode='after')
     @classmethod

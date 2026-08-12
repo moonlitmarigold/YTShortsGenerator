@@ -146,6 +146,7 @@ class SQLMenu:
             f"Continue (rerun from the current step: {session.step})": lambda: instructions.Instruction.restart_from_step(session)(),
             "View script": lambda: instructions.Instruction.show_script(session)(),
             "Edit script": lambda: instructions.Instruction.edit_script(session)(),
+            "Upload": lambda: instructions.Instruction.upload(session)(),
             "Delete": lambda: SQLMenu._delete_session(session),
         })
         menu.show()

@@ -7,8 +7,7 @@
 
 ## Still to Implement
 
-- Youtube Upload
-- Elevenlabs and other AI/providers
+- Upload description Improvement
 - corn job
 - topic list
 - setup for the project
