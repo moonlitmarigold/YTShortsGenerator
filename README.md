@@ -7,7 +7,7 @@
 
 ## Still to Implement
 
-- Upload description Improvement
 - corn job
-- topic list
+- topic list (use a material list)
 - setup for the project
+- multiple logins // manage logins

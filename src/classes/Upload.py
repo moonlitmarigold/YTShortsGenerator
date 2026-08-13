@@ -17,7 +17,7 @@ class Upload:
         self.uploader = Uploaders.UPLOADER_REGISTER[self.config.name](self.config, self.secrets)
 
     def description(self, session:sessions.SessionInfo):
-        _str = [self.config.description_message, '', session.script.video_metadata.video_description]
+        _str = [session.script.video_metadata.video_description, '', self.config.description_message]
         return '\n'.join(_str)
 
     @staticmethod
@@ -44,8 +44,11 @@ class Upload:
 Title: {video_metadata.suggested_title}
 Description: 
 {description}
-Tags:
-{video_metadata.tags}
+
+{' '.join([f'#{t}' for t in video_metadata.tags])}
+
+The file is at:
+{session.output_video()}
 ''')
             return None
 
