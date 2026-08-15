@@ -1,12 +1,18 @@
-import pydantic
-from . import config, sessions
-from .classes import Prompt, Tts, Transcribe, Audio, Planner, background as _back, video as vid, subtitles as sub, thumbnail as thumb, Upload
+"""Pipeline orchestration for the video generator.
+
+PipelineBuilder composes the step sequence from config; Pipeline.run executes
+it and persists progress after each step via SessionInfo.save().
+"""
+
+import logging
 from pathlib import Path
 from typing import Callable, Optional
+
+from . import config, sessions
+from .classes import Prompt, Tts, Transcribe, Audio, Planner, background as _back, video as vid, subtitles as sub, thumbnail as thumb, Upload
 from .utils import errors, extra_configs, rich_progress
 from rich.progress import Progress
 
-import logging
 logger = logging.getLogger(__name__)
 
 class Pipeline:
@@ -160,9 +166,11 @@ class PipelineBuilder:
         self.add_steps(Audio=a)
 
     def plan(self):
+        """Add the Planner step, using the configured provider for angle selection."""
         p = Planner.Planner(
             self.app_config.generation_type,
             self.app_config.metadata,
+            self.app_config.provider,
             self.env_config
         )
         self.add_steps(Planner=p)

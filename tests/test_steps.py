@@ -192,11 +192,13 @@ def test_prompt():
     app_config, env = config.open_config_env()
 
     session = sessions.SessionInfo.from_config(app_config)
-    #session.inject_prompt_output(Prompt.Prompt._parse_output(input_parse), input_parse)
     try:
+        # Run the Planner first so the prompt file gets a concrete chosen_topic,
+        # then run the Prompt step to generate the full script.
         pl = Planner.Planner(
             app_config.generation_type,
             app_config.metadata,
+            app_config.provider,
             env
         )
         pl.run(session)
