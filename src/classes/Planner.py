@@ -45,12 +45,7 @@ class Planner:
 
     def _provider(self) -> providers.Base.BaseProvider:
         """Instantiate the configured LLM provider."""
-        provider_cls = providers.PROVIDER_REGISTER.get(self.config.name)
-        if provider_cls is None:
-            raise ValueError(
-                f"Provider '{self.config.name}' is not registered. "
-                f"Available: {list(providers.PROVIDER_REGISTER.keys())}"
-            )
+        provider_cls = providers.get_provider(self.config.name)
         return provider_cls(self.config, self.secrets)
 
     @staticmethod

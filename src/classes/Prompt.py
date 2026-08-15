@@ -14,7 +14,7 @@ class Prompt:
         self.provider: providers.Base.BaseProvider = self._provider(secrets)
 
     def _provider(self, secrets:type[BaseModel]):
-        _provider = providers.PROVIDER_REGISTER.get(self.config.name, None)
+        _provider = providers.get_provider(self.config.name)
         return _provider(self.config, secrets)
 
     @staticmethod

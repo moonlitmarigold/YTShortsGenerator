@@ -2,13 +2,19 @@ import yaml
 import dataclasses
 from typing import Optional
 from pydantic import BaseModel, Field, field_validator
-from .. import generation_types
+from ..utils import errors
 
 PROVIDER_REGISTER = dict()
 
 def register(cls):
     PROVIDER_REGISTER[cls.__name__.lower()] = cls
     return cls
+
+def get_provider(provider_name:str):
+    provider = PROVIDER_REGISTER.get(provider_name, None)
+    if not provider:
+        raise errors.ProviderNotKnow(provider_name, PROVIDER_REGISTER)
+    return provider
 
 class ProviderConfig(BaseModel):
     name: str

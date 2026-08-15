@@ -1,4 +1,9 @@
 
+class ProviderNotKnow(Exception):
+
+    def __init__(self, provider_name, provider):
+        super().__init__(f'The provider {provider_name} is not know, the list of know providers is {provider}')
+
 
 class NoPipelineBuildList(Exception):
 
