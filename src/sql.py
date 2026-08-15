@@ -90,6 +90,28 @@ class GenerationSession(SQLModel, table=True):
     video: Optional["Video"] = Relationship(back_populates="generation_session")
 
 
+class Material(SQLModel, table=True):
+    """Content material a generation type can draw from.
+
+    Tracks which angles/items have already been turned into videos so the
+    Planner can prefer fresh ones. `material_metadata` holds arbitrary JSON
+    (links, source ids, engagement counts, etc.) specific to the generation
+    type.
+
+    Note:
+        The column is named `material_metadata` because SQLModel/SQLAlchemy
+        reserves `metadata` as a class attribute (`SQLModel.metadata`).
+    """
+
+    __tablename__ = "material"
+
+    id: Optional[int] = Field(default=None, primary_key=True)
+    generation_type: str
+    name: str
+    used: bool = Field(default=False)
+    material_metadata: dict = Field(default={}, sa_column=Column(JSON))
+
+
 class VideoPerformance(SQLModel, table=True):
     __tablename__ = "video_performance"
 

@@ -7,7 +7,7 @@ import shutil
 from pathlib import Path
 from sqlmodel import Session, select
 from . import config, sql
-from .utils import schemas, duration, fonts
+from .utils import schemas, duration, fonts, planner_schemas
 
 logger = logging.getLogger(__name__)
 
@@ -69,6 +69,10 @@ class SessionInfo:
 
     def prompt_file(self):
         return self._path('prompt.md')
+
+    def planner_file(self):
+        """Path where the rendered planner prompt is saved for this session."""
+        return self._path('planner.md')
 
     def subtitle_file(self):
         return self._path(f'subtitle_file.ass')
@@ -136,6 +140,51 @@ class SessionInfo:
             self.script.video_metadata.video_description += des
         else:
             self.script.video_metadata.video_description = des
+
+    @staticmethod
+    def return_material_list(generation_type: str) -> list[planner_schemas.Material]:
+        """Return all material rows for a generation type, newest first."""
+        engine = sql.return_engine()
+        with Session(engine) as s:
+            statement = select(sql.Material).where(sql.Material.generation_type == generation_type)
+            materials = s.exec(statement)
+
+            return [
+                planner_schemas.Material(
+                    id=material.id,
+                    generation_type=material.generation_type,
+                    name=material.name,
+                    used=material.used,
+                    material_metadata=material.material_metadata,
+                )
+                for material in materials
+            ]
+
+    @staticmethod
+    def set_material_used(material_id: int) -> None:
+        """Mark a material row as used."""
+        engine = sql.return_engine()
+        with Session(engine) as s:
+            row = s.get(sql.Material, material_id)
+            if row is None:
+                raise ValueError(f"No material with id {material_id}")
+            row.used = True
+            s.add(row)
+            s.commit()
+
+    @staticmethod
+    def add_material(material: planner_schemas.Material) -> None:
+        """Insert a new material row from a planner schema."""
+        engine = sql.return_engine()
+        with Session(engine) as s:
+            row = sql.Material(
+                generation_type=material.generation_type,
+                name=material.name,
+                used=material.used,
+                material_metadata=material.material_metadata,
+            )
+            s.add(row)
+            s.commit()
 
     @staticmethod
     def all_sessions_id():
