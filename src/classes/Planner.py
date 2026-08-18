@@ -24,7 +24,7 @@ logger = logging.getLogger(__name__)
 MAX_PLAN_RETRIES = 3
 
 
-@dataclasses.dataclass()
+@dataclasses.dataclass
 class Planner:
     """Chooses a concrete topic/angle for a video and writes the final prompt.
 
@@ -112,7 +112,9 @@ class Planner:
         }
 
         planner_prompt = generation_obj.return_planner_file(context)
-        session.planner_file().write_text(planner_prompt)
+        session.planner_file().touch(exist_ok=True).write_text(planner_prompt)
+
+        # TODO: Add a search query first
 
         # Retry a few times: reasoning models sometimes emit malformed JSON or
         # forget a required field. We log each failure and bail out after

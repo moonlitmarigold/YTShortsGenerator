@@ -11,7 +11,7 @@ import dataclasses
 from pathlib import Path
 
 from . import hooks
-
+from .. import research
 
 @dataclasses.dataclass
 class GenerationType:
@@ -31,6 +31,7 @@ class GenerationType:
     name: str
     hooks: tuple
     resolution: tuple[int, int]
+    research_backend:type[research.BaseResearch]
     # Hooks specific to this type's planner.md (e.g. injecting a generation-type-specific
     # "custom_data" section like reddit story links) - applied in addition to the
     # universal hook_metadata/hook_material_table pair every planner.md gets.
@@ -88,6 +89,7 @@ GENERATION_TYPES = {
         hooks=(
             hooks.hook_fonts,
         ),
-        resolution=(1080, 1920)
+        resolution=(1080, 1920),
+        research_backend=research.Wikiquote,
     ),
 }
