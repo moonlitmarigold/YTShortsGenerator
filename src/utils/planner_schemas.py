@@ -25,6 +25,8 @@ class Material(BaseModel):
 
     id: Optional[int] = None
     generation_type: str
+    source:str
+    external_id:str
     name: str
     used: bool = False
     material_metadata: dict = {}
